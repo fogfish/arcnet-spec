@@ -6,5 +6,5 @@ A reference example conforming to this specification lives in [`examples/`](exam
 
 ## License
 
-[![See LICENSE](https://img.shields.io/github/license/fogfish/arcnet.svg?style=for-the-badge)](LICENSE)
+[![See LICENSE](https://img.shields.io/github/license/fogfish/arcnet-spec.svg?style=for-the-badge)](LICENSE)
 
