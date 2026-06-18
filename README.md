@@ -4,6 +4,13 @@ This document specifies a **file format and folder convention** for a knowledge 
 
 A reference example conforming to this specification lives in [`examples/`](examples/) and simulates a graph built from six documents.
 
+## Documents
+
+- [`ARCNET-CORE.md`](ARCNET-CORE.md) — the domain-agnostic core: node model, identity, edges, citations, core kinds, merges, version control, and patch format.
+- [`ARCNET-AST.md`](ARCNET-AST.md) — runtime-agnostic in-memory model: a plain-JSON representation of the graph as nodes of text, links, and headers, a lossless round-trip of the Markdown files.
+- [`ARCNET-DOMAIN-ARTICLE.md`](ARCNET-DOMAIN-ARTICLE.md) — reference domain profile for ingesting research articles (`hypothesis`, `aporia`).
+
+
 ## License
 
 [![See LICENSE](https://img.shields.io/github/license/fogfish/arcnet-spec.svg?style=for-the-badge)](LICENSE)

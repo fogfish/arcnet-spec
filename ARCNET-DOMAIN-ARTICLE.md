@@ -1,4 +1,4 @@
-# DOMAIN-DOC — Article Extension
+# DOMAIN ARTICLE - Markdown Knowledge Graph extension with Articles
 
 **Status:** Accepted · **Version:** 0.4 · **Date:** 2026-06-15
 **Extends:** [`CORE.md`](CORE.md)
