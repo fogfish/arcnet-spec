@@ -1,6 +1,6 @@
 # AST — In-Memory Representation of the Graph
 
-**Status:** Accepted · **Version:** 0.4 · **Date:** 2026-06-22
+**Status:** Accepted · **Version:** 0.4 · **Date:** 2026-06-23
 **Extends:** [`CORE.md`](ARCNET-CORE.md)
 
 This document specifies a **runtime-agnostic in-memory model** for the Markdown knowledge graph defined by [CORE](ARCNET-CORE.md). It is a *model definition*, not a wire or storage format: it fixes the shapes an application holds in memory so producers and consumers in any language interoperate. The model is a **lossless projection** of the on-disk graph — the Markdown files (CORE §3.1), the document patch (CORE §12), and this model convert without loss of content or connectivity.
@@ -13,14 +13,22 @@ The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY** ar
 
 ## 2. Purpose and Scope
 
-The model is the **AST every application loads into**. The Markdown graph (CORE §3.1) and a patch (CORE §12) are two human readable on-disk forms of the same node objects: an application parses either into the model, operates on it, and serializes it back. Applying a patch to the graph (CORE §12.3) is the model's central operation — load the patch nodes and the target nodes, then reconcile each by the kind's merge (CORE §10). Conversion between the forms is lossless (§3.6).
+The model is the **AST every application loads into**. The Markdown graph (CORE §3.1) and a patch (CORE §12) are two human-readable on-disk forms of the same node objects: an application parses either into the model, operates on it, and serializes it back. Applying a patch to the graph (CORE §12.3) is the model's central operation — load the patch nodes and the target nodes, then reconcile each by the kind's merge (CORE §10). Conversion between the forms is lossless (§3.6).
 
-CORE §4 defines a node as **front-matter scalars + a Markdown body**. In the graph the body is human readable prose plus **edges** (`predicate:: [[Target]]`) and **literals** (plain bullets, possibly naming a node inline). From the *representation and navigation* perspective this collapses to exactly **two kinds of thing**:
+CORE §4 defines a node as **front-matter scalars + a Markdown body**. In the graph the body is human-readable prose plus **edges** (`predicate:: [[Target]]`) and **literals** (plain bullets, possibly naming a node inline). From the *representation and navigation* perspective this collapses to exactly **two kinds of thing**:
 
 1. **Text** — a content block, opaque to a program and carried verbatim. A consumer **MUST NOT** parse it. Prose, literals (CORE §4), and any inline `[[wikilink]]` markup authored inside them are all Text. A node carries Text in at most two named places: a leading block (§6.1) and an optional trailing block (§6.1).
-2. **Links** — the elements that establish connectivity: wikilinks, predicated edges, and citations. A **single Link abstraction** (§6.2) carries its own `predicate` and represents all three; a citation is a Link whose `predicate` is a citation type (CORE §8). Links are presented in **`links`** (§6.3) — an object of role-keyed **blocks**, each an ordered unit of **navigation**, not formatting. A block's role label is **not** the same axis as a Link's predicate (§6.3).
+2. **Link** — the one abstraction for every connection: wikilinks, predicated edges, and citations. A citation is a Link whose `predicate` is a citation type (CORE §8).
 
-The central design rule follows from this: connectivity is navigable only because Links are first-class elements.
+A Link is stored on the node for one of three distinct purposes, and never two at once for the same purpose:
+
+- **`hrefs`** (§6.3) — every link literally embedded inside `text`/`notes`, kept only so an in-memory application can iterate them without parsing Text. It is a cache of what is written, not the graph.
+- **`edges`** (§6.4) — the node's structural edges that the producer did not group under a heading: a flat, ordered, possibly mixed-predicate list.
+- **`links`** (§6.5) — structural edges the producer *did* group under a heading, one block per predicate.
+
+There is no fourth, structural kind of element. A Markdown heading that groups a predicate's edges (e.g. `## Mentions`) is the **display title of that predicate's block** (§6.5), carried as an attribute of the block, never as a sibling element. A heading and the edges it labels are one object; a heading cannot exist without edges, edges cannot exist without an implied heading, and no other content can interpose between a heading and the edges it labels.
+
+The central design rule follows from this: connectivity is navigable only because a Link sits in `edges` or `links` — never because a consumer scans Text, and never via `hrefs`, which is a derived convenience, not an edge source.
 
 Any program-relevant meaning a document carries **MUST** be expressed as an **attribute** or a **Link**; **exceptionally**, and only with profile justification, as a new top-level Node member (§8). Deep parsing of Markdown by a consumer is out of scope and is to be avoided.
 
@@ -29,12 +37,11 @@ This document does **not** define how nodes are produced (CORE's non-scope) and 
 ## 3. Design Invariants
 
 1. **One node, one object.** Each CORE node (one `.md` file) is one **node object** (§4).
-2. **Two element kinds only.** Content is **Text** (`text`, `notes` — §6.1) or **Links**, presented in `links` blocks keyed by role (§6.3). 
-3. **No consumer-side Markdown parsing.** Text is opaque (§6.1). A consumer reads connectivity from `links` alone. A consumer **MUST NOT** scan Text to *discover* edges; finding where a *known* edge's target sits inside Text. 
-4. **Item order is preserved; block order is not.** Within one `links[role].seq` array, order is the application specific order where a kind's schema assigns it meaning (e.g. CORE §9.4's chronological entries). Blocks are **not** stored in the canonical order. The rendering rule (§6.3) provides a recommendation about ordering.
-5. **Open vocabularies, preserve unknowns.** `kind`, attribute names, a Link's `predicate`, a block's role key, and a block's `title` are each independently open. A consumer **MUST** preserve attributes, role keys, and predicates it does not recognize (CORE §4), so a profile (CORE §13) extends the model with data alone (§8).
-6. **Predicate and role are independent axes.** A Link's `predicate` (§6.2) names the edge's semantics (CORE §7.3); the `links` key it is filed under (§6.3) names only how it is grouped for navigation and display. A consumer **MUST NOT** infer one from the other. A role MAY hold Links of several predicates, or none; the same predicate MAY appear under more than one role.
-7. **Lossless conversion.** Markdown ⇄ model ⇄ patch (CORE §12) preserves content, connectivity, front-matter, item order within a block, and every Link's `predicate`/`target`/`alias`. Insignificant whitespace and the relative order of `links` blocks **MAY** be normalized (§3.4).
+2. **Two element kinds only.** Content is **Text** (`text`, `notes` — §6.1) or **Link** (§6.2), held in `hrefs`, `edges`, or `links` (§6.3–§6.5). No structural element kind exists in this version; a heading is the `title` of the `links` block it labels, never a separate sibling.
+3. **No consumer-side Markdown parsing for edges.** Text is opaque (§6.1). A consumer reads connectivity from `edges`/`links` alone; it never extracts an edge from Text. `hrefs` is populated by the producer by scanning Text, but a consumer treats it as already computed and **MUST NOT** itself parse Text to derive or verify it (§6.3); `hrefs` is also never treated as a source of navigable edges.
+4. **Item order is preserved; block order is not.** Order within `hrefs`, within `edges`, and within one `links[predicate].seq` is the on-disk order and is significant wherever a kind's schema assigns it meaning (e.g. CORE §9.4's chronological entries, modeled as `edges`). Which predicate's `links` block precedes which, however, is **not** stored: the canonical order is deterministic — `edges` first, then `links` blocks sorted by `title` — and is a rendering rule (§6.5), not data.
+5. **Open vocabularies, preserve unknowns.** `kind`, attribute names, and predicate names (whether on a `link.predicate` field or as a `links` key) are open. A consumer **MUST** preserve attributes and predicates it does not recognize (CORE §4), so a profile (CORE §13) extends the model with data alone (§8).
+6. **Lossless conversion.** Markdown ⇄ model ⇄ patch (CORE §12) preserves content, connectivity, front-matter, item order within `hrefs`/`edges`/a `links` block, and every Link's `predicate`/`target`/`alias`. Insignificant whitespace and the relative order of `links` blocks **MAY** be normalized (§3.4).
 
 ## 4. Node Object
 
@@ -50,7 +57,7 @@ This document does **not** define how nodes are produced (CORE's non-scope) and 
     "tags": ["tls", "protocols"]
   },
   "text": "A design retrospective on the TLS 1.3 handshake and the residual risk of zero round-trip resumption.",
-  "links": { /* role-keyed blocks (§6.3) */ }
+  "links": { /* predicate-keyed blocks (§6.5) */ }
 }
 ```
 
@@ -59,12 +66,14 @@ This document does **not** define how nodes are produced (CORE's non-scope) and 
 - `kind` (mandatory) — the node kind (CORE §4); a core kind or a profile kind. Open vocabulary.
 - `attrs` (mandatory) — the front-matter scalar attributes (§7), as a JSON object, **excluding** `kind`. The identity field (`id`/`title`) **MAY** be repeated here for convenience.
 - `text` (optional) — the leading opaque prose block (§6.1). Mandatory or recommended per the kind's own schema (e.g. CORE §9.1's `abstract`); absent when the kind has none (e.g. `timeline`).
-- `notes` (optional) — a trailing opaque prose block (§6.1), distinct from `text` because it renders **after** `links`, never before.
-- `links` (mandatory) — an object keyed by an open **role** label (a presentation grouping, §6.3), each value a block (§6.3). **MAY** be empty `{}`. The reserved key `""` is the default unlabeled role.
+- `notes` (optional) — a trailing opaque prose block (§6.1), distinct from `text` because it renders **after** `edges`/`links`, never before.
+- `hrefs` (optional) — an ordered array of Links embedded inline in `text`/`notes` (§6.3). **MAY** be empty or absent.
+- `edges` (optional) — an ordered, possibly mixed-predicate array of Links not grouped under a heading (§6.4). **MAY** be empty or absent.
+- `links` (optional) — an object keyed by predicate name, each value a block (§6.5). **MAY** be empty `{}` or absent.
 
-The leading `# <title>` heading of an on-disk node repeats `attrs.title`/`id` and is **derivable**; it is **not** stored. A block's display heading (e.g. `## Mentions`) is likewise not stored independently — it is `links["mentions"].title` (§6.3) — and is a property of the role's block, not of the predicate.
+The leading `# <title>` heading of an on-disk node repeats `attrs.title`/`id` and is **derivable**; it is **not** stored. A `links` block's display heading (e.g. `## Mentions`) is likewise not stored independently — it is `links["mentions"].title` (§6.5).
 
-A consumer that traverses the graph collects a node's outgoing edges by iterating the values of `links` and flattening their `seq` (and any link-valued attribute, §7) — an O(n) walk with no Markdown parsing and no element-type filtering, since `links` holds only Links by construction. To collect every edge of one **predicate**, filter the flattened `seq` by `link.predicate`: a role's `seq` MAY mix predicates, so the role key alone is not a reliable filter (§6.3). A binding **MAY** additionally cache a flat link list, but `links` remains authoritative.
+A consumer that traverses the graph collects a node's outgoing edges by concatenating `edges` with the flattened `seq` of every `links` value (and any link-valued attribute, §7) — an O(n) walk with no Markdown parsing. `hrefs` is excluded from this walk; it answers "what does the prose embed," not "what does this node connect to." A binding **MAY** additionally cache a combined flat link list, but `edges`/`links` remain authoritative.
 
 ## 5. Graph
 
@@ -78,7 +87,7 @@ A **graph** is an ordered sequence of node objects — a plain JSON array.
 
 A graph **MAY** be partial; a Link target absent from the in-memory set is a dangling reference resolved against the full on-disk graph, not a model error.
 
-## 6. Text, Notes, and Links
+## 6. Text and Links
 
 ### 6.1 `text` and `notes`
 
@@ -87,83 +96,95 @@ A graph **MAY** be partial; a Link target absent from the in-memory set is a dan
 ```
 
 - Both are an opaque Markdown run, carried verbatim. The model does **not** decompose either into paragraphs, emphasis, lists, or marks, and a consumer **MUST NOT** parse them (§3.3).
-- `text` **MUST** render before `links`; `notes` **MUST** render after. A kind whose CORE schema defines only one prose field (e.g. `source`'s `abstract`, `entity`'s `definition`) carries it as `text`; a kind whose schema additionally defines a closing field (e.g. `entity`/`resource`'s `notes`, CORE §9.2/§9.3) carries that as `notes`. 
-- Either **MAY** contain inline `[[links]]` or the inline predicate form (CORE §7.2) as authored Markdown. These are **content**, not navigable connectivity by themselves; see §6.4.
+- `text` **MUST** render before `edges`/`links`; `notes` **MUST** render after. A kind whose CORE schema defines only one prose field (e.g. `source`'s `abstract`, `entity`'s `definition`) carries it as `text`; a kind whose schema additionally defines a closing field (e.g. `entity`/`resource`'s `notes`, CORE §9.2/§9.3) carries that as `notes`. A kind with no prose field at all (`timeline`, CORE §9.4) carries neither.
+- Either **MAY** contain inline `[[links]]` or the inline predicate form (CORE §7.2) as authored Markdown. These are mirrored into `hrefs` (§6.3); they are not themselves navigable connectivity unless also present in `edges`/`links`.
 - Emphasis and other inline Markdown formatting are part of Text. The model does **not** elevate them. If an application needs a piece of Markdown as structured data, it lifts it into an **attribute** (§7) — a producer/profile concern, never a Text field.
 
 ### 6.2 `link` — the Unified Edge
 
-A Link is the one abstraction for every connection, and it **carries its own predicate** — the
-predicate is never inferred from whichever `links` role (§6.3) the Link happens to be filed under. CORE's forms map onto it as follows:
+A Link is the one abstraction for every connection. Its shape is the same wherever it is stored (§6.3–§6.5):
 
-| CORE form (§7, §8)                                        | Representation                                                                                          |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| untyped mention `[[Target]]`                              | `{ "target": "Target" }` — no `predicate`; conventionally filed under the reserved `""` role            |
-| display alias `[[Target\|text]]`                          | `{ "target": "Target", "alias": "text" }`                                                               |
-| list/body predicated edge `pred:: [[Target]]`             | `{ "predicate": "pred", "target": "Target" }`, conventionally filed under a role named `"pred"`         |
-| citation `citesAsEvidence:: [[X]]`                        | `{ "predicate": "citesAsEvidence", "target": "X" }`                                                     |
-| inline predicated edge `[pred:: [[Target]]]` inside prose | the same Link shape, filed under the default `""` role; the markup also stays verbatim in `text`/`notes` (§6.4) |
+```json
+{ "predicate": "mentions", "target": "Transport Layer Security" }
+```
 
 - `target` (mandatory) — the target basename (CORE §3.2).
-- `predicate` (recommended) — the edge predicate (camelCase, registered, CORE §7.3). Absent for an untyped mention. A consumer **MUST** read predicate only from this field (§3.6) — never from the `links` role key.
+- `predicate` (recommended in `hrefs`/`edges`; redundant in `links`) — the edge predicate (camelCase, registered, CORE §7.3). Absent for an untyped mention. Inside a `links` block the predicate is already the map key and **SHOULD** be omitted from the item; if present it **MUST** match the key.
 - `alias` (optional) — the display text of `[[Target|text]]` (CORE §7.1).
 - A **citation** is a Link whose `predicate` is a citation type (CORE §8); it needs no separate shape, though a binding **MAY** classify it from the predicate's `cito:` namespace.
 
-### 6.3 `links` — Role-Keyed Blocks
+CORE's forms map onto the three containers as follows:
+
+| CORE form (§7, §8)                                              | Representation                                                                                  |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| untyped mention `[[Target]]`, a standalone body bullet              | `{ "target": "Target" }` in `edges` (§6.4)                                                          |
+| display alias `[[Target\|text]]`                                    | adds `"alias": "text"` to the Link wherever it is filed                                              |
+| body/list predicated edge `pred:: [[Target]]`, no heading            | `{ "predicate": "pred", "target": "Target" }` in `edges` (§6.4)                                     |
+| predicated edges grouped under a heading (e.g. `## Mentions`)       | `{ "target": "Target" }` in `links["pred"].seq` (§6.5) — predicate implied by the key               |
+| citation `citesAsEvidence:: [[X]]`                                   | `{ "predicate": "citesAsEvidence", "target": "X" }`, in `edges` or grouped in `links` if headed     |
+| inline predicated edge `[pred:: [[Target]]]` inside prose, navigable | `{ "predicate": "pred", "target": "Target" }` in **both** `hrefs` (§6.3) and `edges`/`links`         |
+| bare inline mention `[[Target]]` inside prose, not meant to be a navigable edge | `{ "target": "Target" }` in `hrefs` **only** (CORE §4's literal-with-embedded-link case) |
+
+### 6.3 `hrefs` — the Inline Link Cache
+
+```json
+"hrefs": [
+  { "predicate": "citesAsEvidence", "target": "RFC 8446" }
+]
+```
+
+- `hrefs` is an ordered array of `link` elements (§6.2), one per literal `[[Target]]` occurrence (bare or inline-predicated, CORE §7.2) physically embedded inside `text`/`notes`.
+- It exists **only** so an in-memory application can iterate a node's inline links in O(n), without parsing `text`/`notes`. It is **not** the graph's edge structure.
+- The producer **MUST** populate `hrefs` by scanning the Markdown it converts. A consumer **MUST** treat `hrefs` as already computed and **MUST NOT** parse Text to verify or rebuild it.
+- An inline link that is also meant to be a navigable graph edge **MUST** additionally appear in `edges` or `links` (§6.4/§6.5), carrying the same `predicate`/`target` — duplication between `hrefs` and `edges`/`links` is expected for that case. A bare inline mention with no intended navigability (CORE §4's literal-with-embedded-link case) **MAY** exist only in `hrefs`.
+- `hrefs` **MAY** be empty or absent when neither `text` nor `notes` embeds a link.
+
+### 6.4 `edges` — the Flat Predicate List
+
+```json
+"edges": [
+  { "predicate": "replaces", "target": "SSL Protocol" },
+  { "predicate": "conformsTo", "target": "RFC 8446" }
+]
+```
+
+- `edges` is an ordered array of `link` elements (§6.2) — structural edges the producer did **not** group under a display heading.
+- Each item **MAY** carry `predicate`; absence means an untyped mention.
+- `edges` **MAY** mix any number of distinct predicates. This is exactly the case a single-predicate `links` block cannot represent, e.g. `entity`'s bare semantic edges (`replaces`, `conformsTo`, …, CORE §9.2) that sit directly under `text` with no preceding `##`.
+- Item order is preserved and is significant wherever a kind's schema assigns it meaning. `timeline`'s entries (CORE §9.4) are exactly `edges` with no `predicate`, in chronological order; the per-entry display annotation (title, author, date) is rendered from each target's own `attrs`, never stored on the `timeline` node.
+- `edges` renders immediately after `text`, before any `links` block, and before `notes`.
+
+### 6.5 `links` — Predicate-Grouped Blocks
 
 ```json
 "links": {
   "mentions": {
     "title": "Mentions",
     "seq": [
-      { "predicate": "mentions", "target": "Transport Layer Security" },
-      { "predicate": "mentions", "target": "Forward Secrecy" }
+      { "target": "Transport Layer Security" },
+      { "target": "Forward Secrecy" }
     ]
   },
   "cites": {
     "title": "Cites",
     "seq": [
-      { "predicate": "cites", "target": "RFC 8446" }
+      { "target": "RFC 8446" }
     ]
   }
 }
 ```
 
-- `links` is a JSON object keyed by an open **role** label — a presentation grouping, not a predicate — or the reserved key `""` for the default, unlabeled role.
-- Each value is a **block**: `title` (optional) and `seq` (mandatory, an ordered, non-empty array of `link` elements, §6.2).
-- `title` is the block's display heading text (rendered as `## <title>` in a graph file; as a bold label in a patch, CORE §12.2). It defaults to nothing — **absent** `title` means the block renders as plain bullets with **no heading**.
-- `seq` **MUST NOT** be empty; a producer with no edges for a role **MUST** omit that key rather than emit an empty block.
+- `links` is a JSON object keyed by **predicate name** (camelCase, registered, CORE §7.3).
+- Each value is a **block**: `title` (optional, defaults to the predicate name capitalized) and `seq` (mandatory, non-empty, ordered array of `link` elements, §6.2).
+- Every item in one block shares the block's predicate, so the predicate is read from the key, not repeated on the item (§6.2).
+- A `links` block exists exactly when the producer wants a `## <title>` heading grouping that predicate's edges (CORE §9's `## Mentions`, `## Cites`, `## isCitedBy`, `## mentionedIn`). A predicate's edges that are not meant to render under a heading belong in `edges` (§6.4) instead — even if other edges of the same predicate elsewhere do have one.
+- **Canonical block order** (§3.4) for rendering: `edges` first, then `links` blocks sorted by `title`, then `notes`. This order is derived at render time and is never stored.
+- **Item order within a block is preserved.**
+- **Merge (CORE §10 `union`).** A contribution's block for predicate `P` unions into the existing block for `P` by `target`-deduplicated union of `seq`; `title` follows first-writer precedence. `edges` similarly unions by the `(predicate, target)` pair, since two Links to the same target under different predicates are distinct.
 
-**A role names a grouping, not a predicate.** By convention — and in every CORE §9 worked example — a role's name matches the single predicate its Links share (`mentions`, `cites`, `isCitedBy`, `mentionedIn`), and `title` is that name capitalized. This convention is **not** a constraint:
-  - A role's `seq` **MAY** mix several predicates under one heading, e.g. a profile that wants one `## Citations` block covering several CITO predicates instead of one block per predicate:
-    ```json
-    "Citations": {
-      "title": "Citations",
-      "seq": [
-        { "predicate": "citesAsEvidence", "target": "RFC 8446" },
-        { "predicate": "disputes", "target": "Bellovin 2019" }
-      ]
-    }
-    ```
-  - A role's `seq` **MAY** hold untyped Links alongside predicated ones. **A Link authored inline in prose (§6.4) is filed under the reserved `""` role by default, regardless of its predicate** — being authored inline, rather than as a list/body-form edge, is a presentation fact independent of any headed block, so it does not by itself belong to that predicate's named role.
-  - The same predicate **MAY** be split across more than one role (e.g. some `mentions` edges in a headed block, others left in the default `""` role because they were authored inline) without changing what they mean; `predicate` on the Link is what a consumer queries by, never the role.
-- **Canonical block order** (§3.4) for rendering: headerless blocks first, sorted by role name; then titled blocks, sorted by `title`; `text` always precedes every block, `notes` always follows every block. This order is derived at render time and is never stored.
-- **Item order within a block is preserved.** It is significant wherever the kind's schema assigns it meaning — e.g. a `timeline` node's `links[""].seq` is the chronological entry order (CORE §9.4); a generic consumer otherwise treats it as the producer's authored order.
-- **Merge (CORE §10 `union`).** When a contribution merges into an existing node, blocks with the same role key combine by union of `seq`, deduplicated by the `(predicate, target)` pair — two Links to the same target under different predicates are distinct edges and both survive; `title` follows first-writer precedence, consistent with CORE's per-field commutative-merge requirement.
+### 6.6 Worked Examples
 
-### 6.4 Inline Links within Text
-
-A wikilink target is always a node title (CORE §6.3), so it is always a literal substring of the Text that authored it. This lets the inline predicate form (CORE §7.2) and any other in-prose mention stay fully opaque as Text while remaining recoverable for both navigation and rendering, without a run-encoded or position-indexed Text structure:
-
-- The producer **MUST** keep the inline markup (`[pred:: [[Target]]]`, or a bare `[[Target]]`)
-  verbatim inside `text`/`notes`, and, if the edge is meant to be navigable through this model, also record it as a Link carrying that predicate (or none, for an untyped mention). **By default this Link goes in the reserved `""` role (§6.3)** — the default destination for every inline-authored Link, regardless of predicate — the same rule CORE already applies to a literal that names a node (CORE §4). A producer **MAY** instead file it under its predicate's own headed role if it wants the edge to also surface in that block's rendering.
-- A renderer reproducing Markdown gets the inline mention's navigability for free: the literal
-  `[[...]]` substring round-trips inside Text and any Markdown/wiki viewer renders it as a link without help from this model.
-- `links` remains the **sole authoritative source** for programmatic graph traversal. A consumer **MUST NOT** derive a new edge by scanning Text (§3.3); it **MAY**, for rendering or highlighting, locate a substring inside Text matching a target it already obtained from `links` — a bounded, deterministic string match against a known set of targets, not Markdown parsing.
-
-### 6.5 Worked Examples
-
-`source` (CORE §9.1) — leading `text`, two titled blocks, no `notes`:
+`source` (CORE §9.1) — leading `text`, two titled blocks, no bare `edges`, no `notes`:
 
 ```json
 {
@@ -181,21 +202,21 @@ A wikilink target is always a node title (CORE §6.3), so it is always a literal
     "mentions": {
       "title": "Mentions",
       "seq": [
-        { "predicate": "mentions", "target": "Transport Layer Security" },
-        { "predicate": "mentions", "target": "Forward Secrecy" }
+        { "target": "Transport Layer Security" },
+        { "target": "Forward Secrecy" }
       ]
     },
     "cites": {
       "title": "Cites",
       "seq": [
-        { "predicate": "cites", "target": "RFC 8446" }
+        { "target": "RFC 8446" }
       ]
     }
   }
 }
 ```
 
-`entity` (CORE §9.2) — leading `text`, a **headerless** block, a titled block, trailing `notes`:
+`entity` (CORE §9.2) — leading `text`, bare mixed-predicate `edges`, one titled block, trailing `notes`:
 
 ```json
 {
@@ -208,21 +229,15 @@ A wikilink target is always a node title (CORE §6.3), so it is always a literal
     "tags": ["cryptography"]
   },
   "text": "A cryptographic protocol that establishes an authenticated, confidential channel over an untrusted network.",
+  "edges": [
+    { "predicate": "replaces", "target": "SSL Protocol" },
+    { "predicate": "conformsTo", "target": "RFC 8446" }
+  ],
   "links": {
-    "replaces": {
-      "seq": [
-        { "predicate": "replaces", "target": "SSL Protocol" }
-      ]
-    },
-    "conformsTo": {
-      "seq": [
-        { "predicate": "conformsTo", "target": "RFC 8446" }
-      ]
-    },
     "mentionedIn": {
       "title": "mentionedIn",
       "seq": [
-        { "predicate": "mentionedIn", "target": "rescorla-2026-tls13" }
+        { "target": "rescorla-2026-tls13" }
       ]
     }
   },
@@ -249,14 +264,14 @@ A wikilink target is always a node title (CORE §6.3), so it is always a literal
     "isCitedBy": {
       "title": "isCitedBy",
       "seq": [
-        { "predicate": "isCitedBy", "target": "rescorla-2026-tls13" }
+        { "target": "rescorla-2026-tls13" }
       ]
     }
   }
 }
 ```
 
-`timeline` (CORE §9.4) — no `text`/`notes`. Entries are untyped, so they sit in the default `""` role. Item order is chronological. The display annotation (title, author, date) is rendered from each target's own `attrs`, never stored on the timeline node itself:
+`timeline` (CORE §9.4) — no `text`/`notes`/`hrefs`/`links`; entries are untyped, chronologically-ordered `edges`, with display annotation rendered from each target's own `attrs`:
 
 ```json
 {
@@ -266,14 +281,24 @@ A wikilink target is always a node title (CORE §6.3), so it is always a literal
     "period": "2026-04",
     "granularity": "monthly"
   },
-  "links": {
-    "": {
-      "seq": [
-        { "target": "rescorla-2026-tls13" },
-        { "target": "chen-2026-pqkex" }
-      ]
-    }
-  }
+  "edges": [
+    { "target": "rescorla-2026-tls13" },
+    { "target": "chen-2026-pqkex" }
+  ]
+}
+```
+
+An inline citation (CORE §7.2) — the producer keeps the markup verbatim in `text`, mirrors it into `hrefs`, and records the same edge in `edges` so it is navigable:
+
+```json
+{
+  "text": "...the residual risk of zero round-trip resumption, a property [citesAsEvidence:: [[RFC 8446]]] explicitly documents.",
+  "hrefs": [
+    { "predicate": "citesAsEvidence", "target": "RFC 8446" }
+  ],
+  "edges": [
+    { "predicate": "citesAsEvidence", "target": "RFC 8446" }
+  ]
 }
 ```
 
@@ -283,32 +308,33 @@ A wikilink target is always a node title (CORE §6.3), so it is always a literal
 
 - The known attributes of a `kind` and their types are declared by the kind's three-level element table in CORE §9 or the profile (CORE §13); that table is the attribute schema.
 - A consumer **MUST** preserve attributes it does not recognize (CORE §4). A typesafe binding represents the known attributes as typed fields and unknown attributes in a single overflow map.
-- Unknown attributes **MUST** survive a serailizations unchanged (§3.6).
+- Unknown attributes **MUST** survive a round-trip unchanged (§3.6).
 
 ## 8. Extensibility
 
 A profile (CORE §13) extends the model with **data alone**, in priority order:
 
-| Need                                          | Model representation                                                          |
-| --------------------------------------------- | ----------------------------------------------------------------------------- |
-| program-relevant scalar / flag                | a new **attribute** (§7) + its declared type in the profile schema            |
-| connectivity / navigation, 1:N or 1:1         | a new **predicate** on a Link (§6.2), registered per CORE §7.3                |
-| new presentational grouping of existing Links | a new **role** key in `links` (§6.3) — open, no registration, no shape change |
-| display heading for a role's block            | the block's `title` (§6.3) — existing, no shape change                        |
-| new node kind                                 | a new `kind` value (§4) — no shape change                                     |
-| new node-level content area                   | **exceptionally**, a new top-level Node member — see below                    |
+| Need                                              | Model representation                                                              |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| program-relevant scalar / flag                        | a new **attribute** (§7) + its declared type in the profile schema                     |
+| connectivity / navigation, ungrouped or mixed-predicate | a new **predicate** on a Link (§6.2), placed in `edges` (§6.4)                       |
+| connectivity / navigation, grouped under a heading     | a new **predicate**, registered per CORE §7.3, as a `links` key (§6.5)                |
+| display heading for a predicate's block                | the block's `title` (§6.5) — existing, no shape change                                |
+| new node kind                                           | a new `kind` value (§4) — no shape change                                             |
+| new node-level content area                             | **exceptionally**, a new top-level Node member — see below                            |
 
-A new top-level **Node member** is permitted only when the need cannot be met by an attribute or a `links` entry, and the profile **MUST** justify it. Because consumers preserve unknown `attrs` keys, unknown `links` role keys, and unknown `predicate` values (§3.5), an extension that stays within `attrs`/`links` never breaks a conforming binding. A profile **MUST NOT** redefine the node object, the Link abstraction, or the attribute encoding (consistent with CORE §13).
+A new top-level **Node member** is permitted only when the need cannot be met by an attribute, `edges`, or `links`, and the profile **MUST** justify it. Because consumers preserve unknown `attrs` keys and unknown predicates (§3.5), an extension that stays within `attrs`/`edges`/`links` never breaks a conforming binding. A profile **MUST NOT** redefine the node object, the Link abstraction, or the attribute encoding (consistent with CORE §13).
 
 ## 9. Conformance Checklist
 
-- [ ] Each CORE node is one node object with `id`, `kind`, `attrs`, `links` (§4); `text`/`notes` present when the kind's schema defines a corresponding prose field.
+- [ ] Each CORE node is one node object with `id`, `kind`, `attrs` (§4); `text`/`notes`/`hrefs`/`edges`/`links` present when the kind's schema and content require them.
 - [ ] `id` equals the file basename; `kind` is preserved verbatim (§4).
-- [ ] `links` is a JSON object keyed by an open role label, or the reserved `""` default role; every value is a block of `title` (optional) and `seq` (a non-empty ordered array of Links, §6.3).
-- [ ] Every Link carries its own `predicate` (or none, for an untyped mention); a consumer **MUST NOT** infer a Link's predicate from the role key it is filed under (§6.2, §6.3).
-- [ ] `text` and `notes` are opaque and carried verbatim; no consumer parses them to discover edges, even though a known Link's target MAY also appear there as a literal substring (§3.3, §6.4).
-- [ ] Every navigable connection — wikilink, predicate, or citation, including the inline predicate form — is a Link present somewhere in `links` with `predicate` set accordingly (§6.2, §6.4).
-- [ ] Item order within a `links` block is preserved; the relative order of blocks themselves, and of `text`/`notes` around them, is the canonical rendering order, not stored data (§3.4, §6.3).
+- [ ] `hrefs`, if present, mirrors exactly the links embedded in `text`/`notes`, and is never read by a consumer as a source of navigable edges (§6.3).
+- [ ] `edges`, if present, is a flat, ordered array of Links not grouped under a heading; it **MAY** mix predicates (§6.4).
+- [ ] `links`, if present, is a JSON object keyed by predicate name; every value is a block of `title` (optional) and `seq` (a non-empty ordered array of Links whose predicate is the key, §6.5).
+- [ ] `text` and `notes` are opaque and carried verbatim; no consumer parses them to discover edges (§3.3, §6.1).
+- [ ] Every navigable connection — wikilink, predicate, or citation, including the inline predicate form — is a Link present in `edges` or `links` (§6.2, §6.3).
+- [ ] Item order within `hrefs`, `edges`, and a `links` block is preserved; the relative order of `edges` and `links` blocks is the canonical rendering order, not stored data (§3.4, §6.5).
 - [ ] `attrs` is a JSON object keyed by attribute name; known attributes follow the per-kind schema and unknown attributes are preserved (§7).
-- [ ] Unknown attributes, role keys, and predicates are preserved; extensions add attributes, predicates, or roles first, a new top-level Node member only exceptionally (§3.5, §8).
-- [ ] Markdown ⇄ model ⇄ patch round-trips without loss of content or connectivity; cosmetic block order MAY be normalized (§3.6).
+- [ ] Unknown attributes and unknown predicates are preserved; extensions add attributes or predicates first, a new top-level Node member only exceptionally (§3.5, §8).
+- [ ] Markdown ⇄ model ⇄ patch round-trips without loss of content or connectivity; cosmetic `links`-block order MAY be normalized (§3.6).
