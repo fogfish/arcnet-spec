@@ -1,7 +1,8 @@
 # Example Knowledge Graph
 
-This directory is a **reference example** conforming to [`../CORE.md`](../CORE.md) and the
-[`../DOMAIN-ARTICLE.md`](../DOMAIN-ARTICLE.md) profile. The data
+This directory is a **reference example** conforming to [`../CORE.md`](../CORE.md), the
+[`../DOMAIN-ARTICLE.md`](../DOMAIN-ARTICLE.md) profile, and the
+[`../ARCNET-CORE-THOUGHT.md`](../ARCNET-CORE-THOUGHT.md) extension. The data
 is **artificial** — six fictional-but-plausible documents on secure-protocol engineering —
 chosen so that subjects recur across documents and the graph is genuinely interconnected.
 Use it to validate the format's usability (open it in Obsidian, traverse the links, query
@@ -26,6 +27,7 @@ graph/
 ├── entities/      17 Sowa-typed subjects (category as a decoded word-bag)
 ├── hypothesis/    6 conclusions (flat; class in front-matter, set by validation)
 ├── aporias/       6 open problems (flat; class in front-matter)
+├── thoughts/      2 Core Thoughts (flat; relate only to source/entity/resource)
 ├── resources/     6 citations / backlog items
 ├── timeline/      production-date index (yearly + monthly)
 └── _meta/         predicate registry + alias table
@@ -46,3 +48,7 @@ graph/
   claim it supports, not in a global bibliography (see [`../CORE.md`](../CORE.md) §8).
 - **Class is optional:** hypothesis/aporia `class` is set only by the validation pass; the
   folder is flat, so an unvalidated node (no class) still has a home.
+- **Core Thoughts are domain-agnostic:** `thoughts/` links only to `source`/`entity`/`resource`
+  (`wasDerivedFrom`, `concerns`, `citesAsEvidence` — all already-registered predicates) and never
+  to a `hypothesis`/`aporia`, so the extension composes with the article profile without
+  depending on it (see [`../ARCNET-CORE-THOUGHT.md`](../ARCNET-CORE-THOUGHT.md)).

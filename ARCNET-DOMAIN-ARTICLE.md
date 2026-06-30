@@ -43,9 +43,7 @@ validated-overwrite (CORE §10).
 - `kind` (mandatory) — the literal `hypothesis`
 - `title` (mandatory) — the claim in short form, equal to the basename
 - `source` (mandatory) — `wasDerivedFrom` link(s) to the originating source node(s)
-- `rank` (recommended) — salience, 0–10
 - `class` (optional) — `established` | `extended` | `novel`; only after validation (§5)
-- `confidence` (optional) — 0–1 strength of the classification; only after validation
 
 **Body**
 - `claim` (mandatory) — a one-sentence statement of the conclusion (rendered emphasized)
@@ -61,9 +59,7 @@ validated-overwrite (CORE §10).
 kind: hypothesis
 title: One-RTT Handshake Preserves Security
 source: [[rescorla-2026-tls13]]
-rank: 8.5
 class: established
-confidence: 0.86
 ---
 *A one round-trip handshake cuts connection-setup latency without weakening the protocol's
 security guarantees.*
@@ -92,7 +88,6 @@ validated-overwrite (CORE §10).
 - `kind` (mandatory) — the literal `aporia`
 - `title` (mandatory) — the tension in short form, equal to the basename
 - `source` (mandatory) — `wasDerivedFrom` link(s) to the originating source node(s)
-- `rank` (recommended) — severity, 0–10
 - `class` (optional) — `critical` | `solved` | `unverified`; only after validation (§5)
 
 **Body**
@@ -109,7 +104,6 @@ validated-overwrite (CORE §10).
 kind: aporia
 title: Zero-RTT Replay Exposure
 source: [[rescorla-2026-tls13]]
-rank: 9.0
 class: critical
 ---
 *Zero round-trip resumption lets early application data be replayed by an attacker.*

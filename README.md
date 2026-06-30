@@ -9,6 +9,7 @@ A reference example conforming to this specification lives in [`examples/`](exam
 - [`ARCNET-CORE.md`](ARCNET-CORE.md) — the domain-agnostic core: node model, identity, edges, citations, core kinds, merges, version control, and patch format.
 - [`ARCNET-AST.md`](ARCNET-AST.md) — runtime-agnostic in-memory model: a plain-JSON representation of the graph as nodes of text, links, and headers, a lossless round-trip of the Markdown files.
 - [`ARCNET-DOMAIN-ARTICLE.md`](ARCNET-DOMAIN-ARTICLE.md) — reference domain profile for ingesting research articles (`hypothesis`, `aporia`).
+- [`ARCNET-CORE-THOUGHT.md`](ARCNET-CORE-THOUGHT.md) — extension adding the `thought` node kind for Core Thoughts distilled from a source's propositions, domain-agnostic.
 
 
 ## License

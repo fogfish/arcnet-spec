@@ -5,7 +5,8 @@ title: Predicate Registry
 # Predicate Registry
 
 The controlled vocabulary of edge predicates used in this graph (mechanism + core vocabulary:
-`CORE.md` §7–§8; domain vocabulary: `DOMAIN-ARTICLE.md` §3).
+`CORE.md` §7–§8; domain vocabulary: `DOMAIN-ARTICLE.md` §3; Core Thought vocabulary:
+`ARCNET-CORE-THOUGHT.md` §4 — reuses entries already listed here, adds no new predicate).
 Names are camelCase and aligned to standard vocabularies where a term exists; otherwise they
 are graph-native (`kg:`). Producers reuse a registered predicate before introducing a new one.
 
@@ -14,20 +15,20 @@ Namespaces: `schema:` schema.org · `dcterms:` DCMI Terms · `cito:` Citation Ty
 
 ## Structural predicates
 
-| Predicate        | From → To                    | Aligned term         |
-| ---------------- | ---------------------------- | -------------------- |
-| `mentions`       | source → entity              | schema:mentions      |
-| `mentionedIn`    | entity → source              | schema:subjectOf     |
-| `proposes`       | source → hypothesis          | kg:proposes          |
-| `raises`         | source → aporia              | kg:raises            |
-| `wasDerivedFrom` | hypothesis/aporia → source   | prov:wasDerivedFrom  |
-| `assumes`        | hypothesis → entity          | kg:assumes           |
-| `concerns`       | aporia → entity              | schema:about         |
-| `addresses`      | hypothesis → aporia          | kg:addresses         |
-| `addressedBy`    | aporia → hypothesis          | kg:addressedBy       |
-| `solvedBy`       | aporia → resource/hypothesis | kg:solvedBy          |
+| Predicate        | From → To                          | Aligned term         |
+| ---------------- | ----------------------------------- | -------------------- |
+| `mentions`       | source → entity                     | schema:mentions      |
+| `mentionedIn`    | entity → source                     | schema:subjectOf     |
+| `proposes`       | source → hypothesis                 | kg:proposes          |
+| `raises`         | source → aporia                     | kg:raises            |
+| `wasDerivedFrom` | hypothesis/aporia/thought → source  | prov:wasDerivedFrom  |
+| `assumes`        | hypothesis → entity                 | kg:assumes           |
+| `concerns`       | aporia/thought → entity             | schema:about         |
+| `addresses`      | hypothesis → aporia                 | kg:addresses         |
+| `addressedBy`    | aporia → hypothesis                 | kg:addressedBy       |
+| `solvedBy`       | aporia → resource/hypothesis        | kg:solvedBy          |
 
-The `source:` front-matter field on hypothesis/aporia nodes carries the `wasDerivedFrom`
+The `source:` front-matter field on hypothesis/aporia/thought nodes carries the `wasDerivedFrom`
 (`dcterms:source`) provenance edge.
 
 ## Semantic predicates (entity ↔ entity / resource)
