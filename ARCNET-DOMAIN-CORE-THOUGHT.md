@@ -1,4 +1,4 @@
-# CORE THOUGHT — Markdown Knowledge Graph extension with Core Thoughts
+# DOMAIN CORE THOUGHT - Markdown Knowledge Graph extension with Core Thoughts
 
 **Status:** Draft · **Version:** 0.1 · **Date:** 2026-06-29
 **Extends:** [`ARCNET-CORE.md`](ARCNET-CORE.md)
