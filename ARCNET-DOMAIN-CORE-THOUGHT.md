@@ -106,15 +106,29 @@ treating this trade-off as settled.
 
 ## 4. Predicate Vocabulary
 
-This extension introduces no new predicate — every edge a `thought` carries reuses a predicate
-already registered by CORE or a co-located domain profile. Register these in
+This extension introduces one new predicate (`generatedThought`) and reuses three already
+registered by CORE or a co-located domain profile. Register these in
 `graph/_meta/predicates.md` if not already present:
 
-| Predicate         | From → To          | Aligned term         |
-| ----------------- | ------------------ | -------------------- |
-| `wasDerivedFrom`  | thought → source   | prov:wasDerivedFrom  |
-| `concerns`        | thought → entity   | schema:about         |
-| `citesAsEvidence` | thought → resource | cito:citesAsEvidence |
+| Predicate           | From → To          | Aligned term                  |
+| ------------------- | ------------------ | ----------------------------- |
+| `wasDerivedFrom`    | thought → source   | prov:wasDerivedFrom           |
+| `generatedThought`  | source → thought   | prov:hadDerivation (inverse)  |
+| `concerns`          | thought → entity   | schema:about                  |
+| `citesAsEvidence`   | thought → resource | cito:citesAsEvidence          |
+
+`wasDerivedFrom` and `generatedThought` are inverses: every `thought.source` edge implies a
+corresponding `generatedThought` edge in the opposite direction. In practice a `source` node
+records these in its body under a `**Thoughts**` section:
+
+```markdown
+**Thoughts**
+- generatedThought:: [[Latency Cost Justifies 1-RTT Risk]]
+```
+
+Both directions must be kept consistent. The canonical direction for provenance queries is
+`thought → source` (via `wasDerivedFrom`); `source → thought` (via `generatedThought`) is the
+navigational convenience for discovering what a source has yielded.
 
 `concerns` and `citesAsEvidence` carry the same meaning here as wherever else they are
 registered (CORE §8, [DOMAIN-ARTICLE](ARCNET-DOMAIN-ARTICLE.md) §4) — a predicate's meaning does
@@ -130,4 +144,6 @@ In addition to the CORE checklist (CORE §14):
 - [ ] No `thought` links to a domain-profile kind (e.g. `hypothesis`, `aporia`) — only to
       `source`, `entity`, or `resource` (§1).
 - [ ] Core Thought extraction ran strictly after core processing for the same source (§1).
+- [ ] Every source referenced by a `thought.source` field carries a matching `generatedThought::`
+      edge back to that thought (§4).
 - [ ] Every predicate used is registered in `graph/_meta/predicates.md` (§4).
