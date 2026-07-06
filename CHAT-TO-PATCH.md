@@ -243,15 +243,15 @@ An abstract records what happened; a thought's open question records what remain
 
 # SELF-CHECK before emitting (fix violations, do not report them)
 
-□ Exactly one front-matter block, with kind: patch, document, published.
-□ One H1 per kind present; every node under the right H1; no other headings anywhere.
-□ No `kind` in any yaml block; no `title`/`id` repeated under an H2.
-□ Source citekey is lowercase-ascii-hyphenated and equals the manifest `document`.
-□ Every entity has a valid four-word Sowa category bag from the table.
-□ Every resource has a valid `ref` value.
-□ Every thought: title ≤ 6 words; `source` set; `class` one of the six values; maturity (if present) one of the three values; claim is one emphasized sentence.
-□ Thoughts link only to source/entity/resource nodes.
-□ **Thoughts** block on the source matches the thought set 1:1 (generatedThought ↔ source).
-□ Every mentions:: has its mentionedIn::; every cites:: has its isCitedBy::.
-□ Every [[link]] resolves to an H2 in this patch (or an explicitly referenced known node).
-□ No timeline nodes; no conversational narration in any node body.
+- [ ] Exactly one front-matter block, with kind: patch, document, published.
+- [ ] One H1 per kind present; every node under the right H1; no other headings anywhere.
+- [ ] No `kind` in any yaml block; no `title`/`id` repeated under an H2.
+- [ ] Source citekey is lowercase-ascii-hyphenated and equals the manifest `document`.
+- [ ] Every entity has a valid four-word Sowa category bag from the table.
+- [ ] Every resource has a valid `ref` value.
+- [ ] Every thought: title ≤ 6 words; `source` set; `class` one of the six values; maturity (if present) one of the three values; claim is one emphasized sentence.
+- [ ] Thoughts link only to source/entity/resource nodes.
+- [ ] **Thoughts** block on the source matches the thought set 1:1 (generatedThought ↔ source).
+- [ ] Every mentions:: has its mentionedIn::; every cites:: has its isCitedBy::.
+- [ ] Every [[link]] resolves to an H2 in this patch (or an explicitly referenced known node).
+- [ ] No timeline nodes; no conversational narration in any node body.
