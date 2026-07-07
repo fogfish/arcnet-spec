@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: Zero Trust Architecture
+"@id": Zero Trust Architecture
+"@type": entity
 category: [independent, abstract, continuant, schema]
 aliases: [zero trust, ZTA]
 tags: [security, access-control]

@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: Certificate Transparency
+"@id": Certificate Transparency
+"@type": entity
 category: [mediating, physical, continuant, structure]
 aliases: [CT, CT logs]
 tags: [pki, transparency, audit]

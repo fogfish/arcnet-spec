@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: Formal Verification
+"@id": Formal Verification
+"@type": entity
 category: [independent, physical, occurrent, process]
 aliases: [mechanized verification, formal methods]
 tags: [verification, formal-methods]

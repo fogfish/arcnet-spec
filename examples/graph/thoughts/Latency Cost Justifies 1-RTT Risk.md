@@ -1,12 +1,13 @@
 ---
-kind: thought
-title: Latency Cost Justifies 1-RTT Risk
-source: [[rescorla-2026-tls13]]
-class: decision
+"@id": Latency Cost Justifies 1-RTT Risk
+"@type": thought
+cognition: decision
 maturity: developing
 ---
 *Accepting the residual replay risk of zero-round-trip resumption is worth the latency win,
 provided application-layer idempotency is enforced upstream.*
+
+- derivedFrom:: [[rescorla-2026-tls13]]
 
 **About**
 The 1-RTT handshake's latency savings are why TLS 1.3 standardized it despite a known replay

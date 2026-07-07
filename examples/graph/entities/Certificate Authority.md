@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: Certificate Authority
+"@id": Certificate Authority
+"@type": entity
 category: [independent, physical, continuant, object]
 aliases: [CA, issuing CA]
 tags: [pki, identity]

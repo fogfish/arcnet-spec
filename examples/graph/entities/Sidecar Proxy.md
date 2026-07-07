@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: Sidecar Proxy
+"@id": Sidecar Proxy
+"@type": entity
 category: [independent, physical, continuant, object]
 aliases: [sidecar]
 tags: [infrastructure, networking]

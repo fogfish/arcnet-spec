@@ -1,6 +1,6 @@
 ---
-kind: resource
-title: Computational Analysis of TLS 1.3
+"@id": Computational Analysis of TLS 1.3
+"@type": resource
 ref: paper
 authors: [Cas Cremers, Marko Horvat, et al.]
 year: 2017
@@ -12,5 +12,6 @@ status: read
 A machine-checked analysis of the TLS 1.3 handshake spanning symbolic and computational
 guarantees, used as evidence for the value of mechanized verification.
 
+## isCitedBy
 - isCitedBy:: [[bhargavan-2026-fverify]]
 - isCitedBy:: [[Mechanized Proofs Catch Flaws Early]]

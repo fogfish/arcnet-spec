@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: SSL Protocol
+"@id": SSL Protocol
+"@type": entity
 category: [independent, abstract, occurrent, script]
 aliases: [SSL, Secure Sockets Layer]
 tags: [cryptography, protocols, legacy]

@@ -1,11 +1,11 @@
 ---
-kind: source
-id: bhargavan-2026-fverify
+"@id": bhargavan-2026-fverify
+"@type": source
 title: "Formal Verification of Handshake Protocols"
 authors: [Karthikeyan Bhargavan]
 published: 2026-06-03
 url: https://example.org/formal-handshake
-ingested: 2026-06-13
+created: 2026-06-13
 tags: [formal-methods, verification, handshake]
 ---
 # Formal Verification of Handshake Protocols

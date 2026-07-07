@@ -1,8 +1,7 @@
 ---
-kind: entity
-title: Service Mesh
+"@id": Service Mesh
+"@type": entity
 category: [mediating, physical, continuant, structure]
-aliases: []
 tags: [infrastructure, networking]
 ---
 # Service Mesh

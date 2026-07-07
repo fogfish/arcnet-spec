@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: Handshake Protocol
+"@id": Handshake Protocol
+"@type": entity
 category: [independent, abstract, occurrent, script]
 aliases: [handshake]
 tags: [cryptography, protocols]

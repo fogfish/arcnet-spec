@@ -1,12 +1,13 @@
 ---
-kind: thought
-title: Transparency Guarantee Hinges On Gossip
-source: [[laurie-2026-ctlog]]
-class: question
+"@id": Transparency Guarantee Hinges On Gossip
+"@type": thought
+cognition: question
 maturity: emerging
 ---
 *Certificate Transparency's split-view detection guarantee only holds if clients actually run
 an effective gossip protocol — an assumption the ecosystem has not yet validated at scale.*
+
+- derivedFrom:: [[laurie-2026-ctlog]]
 
 **About**
 The Merkle-tree audit structure proves a log is internally consistent, but says nothing about

@@ -1,68 +1,79 @@
 # DOMAIN ARTICLE - Markdown Knowledge Graph extension with Articles
 
-**Status:** Accepted · **Version:** 0.4 · **Date:** 2026-06-15
+**Status:** Draft · **Version:** 0.7 · **Date:** 2026-07-07
 **Extends:** [`CORE.md`](CORE.md)
 
-This profile ingests research articles and similar prose documents into a knowledge graph. It
-**adopts the four CORE kinds** (`source`, `entity`, `resource`, `timeline`, [CORE §9](CORE.md))
-and adds two domain kinds — `hypothesis` and `aporia`. All CORE mechanism (identity §6, edges
-§7, citations §8, merge §10, version control §11, patch §12) applies unchanged.
+> Revision note (0.4 → 0.5): follows CORE v0.6's predicate-first model. `kind`/`id`/`title` → `@type`/`@id`. `hypothesis`/`aporia`'s front-matter `source` field was a link value stored where CORE's `meta` role only ever holds scalars — it is now the `derivedFrom` predicate itself, asserted as a body edge like any other. The predicate registry table is retired: every predicate this profile introduces, `hypothesis`/`aporia` themselves, and the extension to CORE's own `source` type are now registered as individual `_schema/predicates/`/`_schema/types/` nodes (CORE §9), described one-per-heading (CORE §10's style) rather than in a table.
+>
+> Revision note (0.5 → 0.6): follows CORE v0.7's retirement of the `## Recommended` tier. Every predicate `hypothesis`/`aporia`/the `source` extension previously recommended is now optional — none of `overview`/`assumptions`/`assumes`/`addresses`/citation evidence (hypothesis), `overview`/`issues`/`concerns`/`addressedBy` (aporia), or `proposes`/`raises` (source extension) is essential to what the type minimally asserts (a claim/tension plus its provenance); each stays valid content a node commonly carries, just not one CORE can require of every instance.
+>
+> Revision note (0.6 → 0.7): `rank` was never a considered part of this design — it entered the worked examples without ever being justified against anything `hypothesis`/`aporia` actually need, and was mistakenly formalized into a registered predicate on top of that. Removed entirely: the predicate, its listing on both types, and every mention in §5. `class`/`confidence` are unaffected.
 
-A complete worked example is in [`graph/`](graph/); its single-file patch serialization is in
-[`patches/`](patches/).
+This profile ingests research articles and similar prose documents into a knowledge graph. It **adopts the four CORE types** (`source`, `entity`, `resource`, `timeline`, [CORE §11](CORE.md)) and adds two domain types — `hypothesis` and `aporia`. All CORE mechanism (identity §7, edges §8, schema/merge §9, citations §12, version control §13, patch §14) applies unchanged.
+
+A complete worked example is in [`graph/`](graph/); its single-file patch serialization is in [`patches/`](patches/).
 
 ## 1. Folder Layout
 
 ```
 graph/
-├── sources/             # source nodes        (CORE §9.1)
-├── entities/            # entity nodes, Sowa   (CORE §9.2)
-├── hypothesis/          # hypothesis nodes     (§2.1)
-├── aporias/             # aporia nodes         (§2.2)
-├── resources/           # resource nodes       (CORE §9.3)
-├── timeline/            # production index     (CORE §9.4)
+├── sources/               # source nodes          (CORE §11.2)
+├── entities/              # entity nodes, Sowa    (CORE §11.3)
+├── hypothesis/            # hypothesis nodes      (§2.1)
+├── aporias/               # aporia nodes          (§2.2)
+├── resources/             # resource nodes        (CORE §11.4)
+├── timeline/              # production index      (CORE §11.5)
 │   ├── yearly/
 │   └── monthly/
-└── _meta/
-    ├── predicates.md    # predicate registry
-    └── aliases.md       # entity alias table
+└── _schema/
+    ├── predicates/         # this profile's own + reused CORE predicates (§4)
+    ├── types/              # hypothesis.md, aporia.md, and source.md's extension (§2, §3.1)
+    └── aliases.md          # entity alias table — not a node (CORE §7.4)
 ```
 
-`hypothesis/` and `aporias/` are flat: a node's `class` lives in front-matter (§5), so it never
-determines file location. The profile also extends the core `source` kind with domain navigation
-blocks (§3).
+`hypothesis/` and `aporias/` are flat: a node's `class` lives in a predicate (§5), so it never determines file location. The profile also extends the core `source` type with domain navigation predicates (§3).
 
-## 2. Domain Kinds
+## 2. Domain Types
 
 ### 2.1 `hypothesis`
 
-A conclusion distilled from sources. **Identity:** title (CORE §6.3). **Merge:**
-validated-overwrite (CORE §10).
-
-**Front-matter**
-- `kind` (mandatory) — the literal `hypothesis`
-- `title` (mandatory) — the claim in short form, equal to the basename
-- `source` (mandatory) — `wasDerivedFrom` link(s) to the originating source node(s)
-- `class` (optional) — `established` | `extended` | `novel`; only after validation (§5)
-
-**Body**
-- `claim` (mandatory) — a one-sentence statement of the conclusion (rendered emphasized)
-- `overview` (recommended) — a short paragraph of context
-- `**Assumptions**` (recommended) — literal premise statement (one per bullet)
-- `**Depends on**` (recommended) — `assumes::` edges to the entities those premises depend on
-- `**Addresses**` (recommended) — `addresses::` edges to the aporias the claim tackles
-- `**Evidence**` (recommended) — citation edges (`citesAsEvidence::`, …; CORE §8)
-- `notes` (optional) — additional prose
+A conclusion distilled from sources. **Identity:** `@id` (CORE §7.3) — the claim in short form, equal to the basename; like `entity`/`resource`, it carries no separate title predicate.
 
 ```markdown
 ---
-kind: hypothesis
-title: One-RTT Handshake Preserves Security
-source: [[rescorla-2026-tls13]]
+"@id": hypothesis
+"@type": Class
+---
+# hypothesis
+
+A conclusion distilled from sources.
+
+## Requires
+- required:: [[derivedFrom]]
+- required:: [[claim]]
+
+## Optional
+- optional:: [[overview]]
+- optional:: [[assumptions]]
+- optional:: [[assumes]]
+- optional:: [[addresses]]
+- optional:: [[notes]]
+- optional:: [[class]]
+- optional:: [[confidence]]
+- any CORE §10.6 citation predicate, as applicable
+```
+
+`class`/`confidence` are produced only by an optional validation pass (§5); an unvalidated `hypothesis` simply has none of them, a valid state.
+
+```markdown
+---
+"@id": One-RTT Handshake Preserves Security
+"@type": hypothesis
 class: established
 ---
-*A one round-trip handshake cuts connection-setup latency without weakening the protocol's
-security guarantees.*
+*A one round-trip handshake cuts connection-setup latency without weakening the protocol's security guarantees.*
+
+- derivedFrom:: [[rescorla-2026-tls13]]
 
 **Assumptions**
 - Forward secrecy is preserved across the 1-RTT key schedule.
@@ -81,34 +92,42 @@ security guarantees.*
 
 ### 2.2 `aporia`
 
-An open problem or unresolved tension. **Identity:** title (CORE §6.3). **Merge:**
-validated-overwrite (CORE §10).
-
-**Front-matter**
-- `kind` (mandatory) — the literal `aporia`
-- `title` (mandatory) — the tension in short form, equal to the basename
-- `source` (mandatory) — `wasDerivedFrom` link(s) to the originating source node(s)
-- `class` (optional) — `critical` | `solved` | `unverified`; only after validation (§5)
-
-**Body**
-- `tension` (mandatory) — a one-sentence statement of the open problem (emphasized)
-- `overview` (recommended) — a short paragraph of context
-- `## Issues` (recommended) — literal statement decomposing the problem
-- `**Concerns**` (recommended) — `concerns::` edges to the entities the problem involves
-- `**Addressed by**` (recommended) — `addressedBy::` edges to the hypotheses that tackle it
-- `**Solved by**` (optional) — `solvedBy::` edges to the resolving resources/hypotheses
-- `notes` (optional) — additional prose
+An open problem or unresolved tension. **Identity:** `@id` (CORE §7.3) — the tension in short form, equal to the basename.
 
 ```markdown
 ---
-kind: aporia
-title: Zero-RTT Replay Exposure
-source: [[rescorla-2026-tls13]]
+"@id": aporia
+"@type": Class
+---
+# aporia
+
+An open problem or unresolved tension.
+
+## Requires
+- required:: [[derivedFrom]]
+- required:: [[tension]]
+
+## Optional
+- optional:: [[overview]]
+- optional:: [[issues]]
+- optional:: [[concerns]]
+- optional:: [[addressedBy]]
+- optional:: [[solvedBy]]
+- optional:: [[notes]]
+- optional:: [[class]]
+```
+
+```markdown
+---
+"@id": Zero-RTT Replay Exposure
+"@type": aporia
 class: critical
 ---
 *Zero round-trip resumption lets early application data be replayed by an attacker.*
 
-## Issues
+- derivedFrom:: [[rescorla-2026-tls13]]
+
+**Issues**
 - Early data can be captured and re-sent to trigger duplicate side effects.
 - Application-layer idempotency is required but not enforceable by the protocol.
 
@@ -120,26 +139,30 @@ class: critical
 - addressedBy:: [[One-RTT Handshake Preserves Security]]
 ```
 
-## 3. Extended Kinds
+## 3. Extended Types
 
-A profile MAY extend a CORE kind with additional Recommended/Optional elements, without changing
-the kind's identity or merge operation. This profile extends `source`; `entity`, `resource`, and
-`timeline` are used as CORE defines them.
+A profile MAY extend a CORE type's `_schema/types/` node with additional Optional predicates, without changing the type's identity or any existing predicate's own merge behavior — the contribution unions into the existing node like any other (CORE §9.3 `union`). This profile extends `source`; `entity`, `resource`, and `timeline` are used as CORE defines them.
 
-### 3.1 `source` (extends CORE §9.1)
+### 3.1 `source` (extends CORE §11.2)
 
-Beyond the core `## Mentions` (entities) and `## Cites` (resources) body blocks, the article
-`source` adds two navigation blocks linking the document to the domain kinds it produces.
-Identity (citekey), front-matter, and merge (none) are inherited from CORE §9.1 unchanged.
-
-**Body (added)**
-- `## Proposes` (recommended) — `proposes::` edges to the hypotheses derived from the document
-- `## Raises` (recommended) — `raises::` edges to the aporias derived from the document
+Beyond the core `## Mentions`/`## Cites` blocks, the article `source` adds two navigation predicates linking the document to the domain types it produces. Identity (citekey) and every other predicate's own merge behavior are inherited from CORE §11.2 unchanged.
 
 ```markdown
 ---
-kind: source
-id: rescorla-2026-tls13
+"@id": source
+"@type": Class
+---
+## Optional
+- optional:: [[proposes]]
+- optional:: [[raises]]
+```
+
+This contribution's `## Optional` block unions into CORE's own `source` Class node (CORE §11.2) at ingestion time — the merged node ends up permitting `authors`/`url`/`cites`/`tags`/`doi` (from CORE) and `proposes`/`raises` (from this profile) alike, alongside CORE's own required `title`/`published`/`abstract`/`mentions`.
+
+```markdown
+---
+"@id": rescorla-2026-tls13
+"@type": source
 title: "TLS 1.3: Design and Rationale"
 authors: [Eric Rescorla]
 published: 2026-04-12
@@ -165,60 +188,122 @@ resumption.
 - cites:: [[RFC 8446]]
 ```
 
-## 4. Predicate Vocabulary
+## 4. Predicates
 
-In addition to the core vocabulary ([CORE §7.4](CORE.md)), this profile registers the following
-in [`graph/_meta/predicates.md`](graph/_meta/predicates.md). Namespaces: `schema:`, `prov:`,
-`cito:`, `arc:` (graph-native).
+In addition to the core vocabulary (CORE §10), this profile registers the following as `_schema/predicates/` nodes (CORE §9.1), one per heading rather than in a table. Namespaces: `schema:`, `prov:`, `cito:`, `arc:` (graph-native).
 
-**Structural** (involving the domain kinds):
+### 4.1 Structural predicates (involving the domain types)
 
-| Predicate        | From → To                    | Aligned term        |
-| ---------------- | ---------------------------- | ------------------- |
-| `proposes`       | source → hypothesis          | arc:proposes        |
-| `raises`         | source → aporia              | arc:raises          |
-| `wasDerivedFrom` | hypothesis/aporia → source   | prov:wasDerivedFrom |
-| `assumes`        | hypothesis → entity          | arc:assumes         |
-| `concerns`       | aporia → entity              | schema:about        |
-| `addresses`      | hypothesis → aporia          | arc:addresses       |
-| `addressedBy`    | aporia → hypothesis          | arc:addressedBy     |
-| `solvedBy`       | aporia → resource/hypothesis | arc:solvedBy        |
+#### `proposes`
+**role:** `link` · **merge:** `union` · **aligned:** `arc:proposes` · **from → to:** source → hypothesis
 
-The `source` front-matter field on `hypothesis`/`aporia` carries the `wasDerivedFrom`
-(`dcterms:source`) provenance edge.
+Asserts that the source document proposes the hypothesis; recorded under the source's own `## Proposes` block.
 
-**Citation** (CORE §8): `citesAsEvidence` and the other `cito:` types, used in `**Evidence**`
-and `**Solved by**`.
+#### `raises`
+**role:** `link` · **merge:** `union` · **aligned:** `arc:raises` · **from → to:** source → aporia
 
-**Domain extensions** (`arc:`): `secures`, `verifies` (entity → entity).
+Asserts that the source document raises the aporia; recorded under the source's own `## Raises` block.
+
+#### `derivedFrom`
+**role:** `edge` · **merge:** `union` · **aligned:** `prov:wasDerivedFrom` · **from → to:** hypothesis/aporia → source
+
+The provenance edge to the originating source(s) this node was distilled from — replaces the old front-matter `source` field, which never fit CORE's scalar-only `meta` role.
+
+#### `assumes`
+**role:** `edge` · **merge:** `union` · **aligned:** `arc:assumes` · **from → to:** hypothesis → entity
+
+The entities a hypothesis's premises depend on. Displayed under the bold label **Depends on**.
+
+#### `concerns`
+**role:** `edge` · **merge:** `union` · **aligned:** `schema:about` · **from → to:** aporia → entity
+
+The entities an aporia's open problem involves.
+
+#### `addresses`
+**role:** `edge` · **merge:** `union` · **aligned:** `arc:addresses` · **from → to:** hypothesis → aporia
+
+The aporia a hypothesis's claim tackles.
+
+#### `addressedBy`
+**role:** `edge` · **merge:** `union` · **aligned:** `arc:addressedBy` · **from → to:** aporia → hypothesis
+
+The inverse of `addresses` — the hypotheses that tackle this aporia. Displayed under the bold label **Addressed by**.
+
+#### `solvedBy`
+**role:** `edge` · **merge:** `union` · **aligned:** `arc:solvedBy` · **from → to:** aporia → resource/hypothesis
+
+The resource or hypothesis that resolves an aporia. Displayed under the bold label **Solved by**.
+
+### 4.2 Type-specific predicates
+
+#### `claim`
+**Used by:** `hypothesis` · **role:** `text` · **merge:** `firstWriteWin`
+
+A one-sentence statement of the conclusion, rendered emphasized (`*claim*`).
+
+#### `tension`
+**Used by:** `aporia` · **role:** `text` · **merge:** `firstWriteWin`
+
+A one-sentence statement of the open problem, rendered emphasized (`*tension*`).
+
+#### `overview`
+**Used by:** `hypothesis`, `aporia` · **role:** `text` · **merge:** `firstWriteWin`
+
+A short paragraph of context.
+
+#### `assumptions`
+**Used by:** `hypothesis` · **role:** `text` · **merge:** `append`
+
+Literal premise statements the hypothesis depends on, one per bullet. Displayed under the bold label **Assumptions**.
+
+#### `issues`
+**Used by:** `aporia` · **role:** `text` · **merge:** `append`
+
+Literal statements decomposing the open problem, one per bullet. Displayed under the bold label **Issues**.
+
+#### `class`
+**Used by:** `hypothesis`, `aporia` · **role:** `meta` · **merge:** `validatedOverwrite`
+
+The node's validation class (§5) — enum values differ per type.
+
+#### `confidence`
+**Used by:** `hypothesis` · **role:** `meta` · **merge:** `validatedOverwrite`
+
+A 0–1 numeric confidence score assigned by the validation pass.
+
+### 4.3 Citation and reused predicates
+
+Evidence and resolution use CORE's own citation vocabulary (CORE §10.6): `citesAsEvidence` and the other `cito:` types, displayed under the bold labels **Evidence** / **Solved by**. `notes` is CORE's own generic prose predicate (CORE §10.7), reused unchanged.
+
+### 4.4 Domain extensions
+
+#### `secures`
+**role:** `edge` · **merge:** `union` · **aligned:** `arc:secures` · **from → to:** entity → entity
+
+#### `verifies`
+**role:** `edge` · **merge:** `union` · **aligned:** `arc:verifies` · **from → to:** entity → entity
 
 ## 5. Validation Classes
 
-`class` on `hypothesis` and `aporia` is produced only by an **optional validation pass** against
-prior knowledge; an unvalidated node has no `class`, which is a valid state. Per the
-`validated-overwrite` merge (CORE §10), `class`/`confidence`/`rank` are owned by that pass.
+`class` on `hypothesis` and `aporia` is produced only by an **optional validation pass** against prior knowledge; an unvalidated node has no `class` predicate, which is a valid state. Per the `validatedOverwrite` merge (CORE §9.3), `class`/`confidence` are owned by that pass.
 
-- **hypothesis.class** — `established` (well-supported by accepted knowledge); `extended` (an
-  increment on accepted knowledge); `novel` (a new claim not yet corroborated).
-- **aporia.class** — `critical` (open, material gap); `solved` (a known resolution exists,
-  recorded via `solvedBy`); `unverified` (plausible, not yet confirmed).
+- **hypothesis's `class`** — `established` (well-supported by accepted knowledge); `extended` (an increment on accepted knowledge); `novel` (a new claim not yet corroborated).
+- **aporia's `class`** — `critical` (open, material gap); `solved` (a known resolution exists, recorded via `solvedBy`); `unverified` (plausible, not yet confirmed).
 
 ## 6. Contradiction, Debate, and Question
 
-Expressed with existing kinds and predicates; this profile adds no node types for them:
+Expressed with existing types and predicates; this profile adds no node types for them:
 
 - **Question** → an `aporia` (class `unverified` until validated).
-- **Contradiction** → a `disputes` edge between the two conflicting hypotheses; reify as an
-  `aporia` when it warrants its own discussion.
-- **Debate** → the subgraph of an `aporia`, the hypotheses that `address` it, and the
-  `supports`/`disputes` edges among them.
+- **Contradiction** → a `disputes` edge between the two conflicting hypotheses; reify as an `aporia` when it warrants its own discussion.
+- **Debate** → the subgraph of an `aporia`, the hypotheses that `address` it, and the `supports`/`disputes` edges among them.
 
 ## 7. Conformance
 
-In addition to the CORE checklist ([CORE §14](CORE.md)):
+In addition to the CORE checklist ([CORE §16](CORE.md)):
 
-- [ ] Every `hypothesis`/`aporia` has a `source` link and a title-based basename (CORE §6.3).
-- [ ] `class` appears only where validation ran; node location never depends on class.
+- [ ] Every `hypothesis`/`aporia` has a `derivedFrom` edge and a claim/tension-based basename (CORE §7.3).
+- [ ] `class` appears only where validation ran; node location never depends on it.
 - [ ] Every document appears in the `timeline` files for its `published` period.
-- [ ] Every predicate used is in §4 or the core vocabulary, and registered in
-      [`graph/_meta/predicates.md`](graph/_meta/predicates.md).
+- [ ] Every predicate used is registered as a `_schema/predicates/` node (§4 or CORE §10).
+- [ ] `hypothesis` and `aporia` are registered as `_schema/types/` nodes (§2); the extension to `source` (§3.1) unions cleanly into CORE's own.

@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: Mutual TLS
+"@id": Mutual TLS
+"@type": entity
 category: [independent, abstract, occurrent, script]
 aliases: [mTLS, mutual authentication TLS]
 tags: [cryptography, identity]

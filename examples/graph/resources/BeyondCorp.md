@@ -1,6 +1,6 @@
 ---
-kind: resource
-title: BeyondCorp
+"@id": BeyondCorp
+"@type": resource
 ref: paper
 authors: [Rory Ward, Betsy Beyer]
 year: 2014
@@ -12,5 +12,6 @@ status: read
 The foundational account of shifting access control from the network perimeter to per-request
 device and user identity.
 
+## isCitedBy
 - isCitedBy:: [[gupta-2026-zerotrust]]
 - isCitedBy:: [[Identity Supersedes Network Perimeter]]

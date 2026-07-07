@@ -1,11 +1,11 @@
 ---
-kind: source
-id: okonkwo-2026-mtls
+"@id": okonkwo-2026-mtls
+"@type": source
 title: "Deploying mTLS in Service Meshes"
 authors: [Chidi Okonkwo]
 published: 2026-06-15
 url: https://example.org/mtls-service-mesh
-ingested: 2026-06-13
+created: 2026-06-13
 tags: [service-mesh, mtls, operations]
 ---
 # Deploying mTLS in Service Meshes

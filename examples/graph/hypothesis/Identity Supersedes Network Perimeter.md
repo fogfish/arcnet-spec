@@ -1,13 +1,13 @@
 ---
-kind: hypothesis
-title: Identity Supersedes Network Perimeter
-source: [[gupta-2026-zerotrust]]
-rank: 7.9
+"@id": Identity Supersedes Network Perimeter
+"@type": hypothesis
 class: novel
 confidence: 0.58
 ---
 *Per-request identity verification should replace network location as the primary unit of
 access control.*
+
+- derivedFrom:: [[gupta-2026-zerotrust]]
 
 **Overview:** A novel reframing of access control in which trust derives from a verified
 identity assertion on every request rather than from residence inside a network perimeter.

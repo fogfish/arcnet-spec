@@ -1,13 +1,13 @@
 ---
-kind: hypothesis
-title: Mechanized Proofs Catch Flaws Early
-source: [[bhargavan-2026-fverify]]
-rank: 8.0
+"@id": Mechanized Proofs Catch Flaws Early
+"@type": hypothesis
 class: established
 confidence: 0.81
 ---
 *Machine-checked symbolic proofs uncover handshake design flaws before the protocol is
 deployed.*
+
+- derivedFrom:: [[bhargavan-2026-fverify]]
 
 **Overview:** Applying automated verifiers to handshake specifications has repeatedly
 surfaced attacks that human review missed, making mechanized verification an accepted part

@@ -1,11 +1,11 @@
 ---
-kind: source
-id: chen-2026-pqkex
+"@id": chen-2026-pqkex
+"@type": source
 title: "Post-Quantum Key Exchange in Practice"
 authors: [Lin Chen, Rajiv Patel]
 published: 2026-04-28
 url: https://example.org/pq-kex-practice
-ingested: 2026-06-13
+created: 2026-06-13
 tags: [post-quantum, cryptography, tls]
 ---
 # Post-Quantum Key Exchange in Practice

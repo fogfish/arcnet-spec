@@ -1,9 +1,9 @@
 ---
-kind: patch
+"@type": patch
 document: rescorla-2026-tls13
 title: "TLS 1.3: Design and Rationale"
 published: 2026-04-12
-stats: { nodes: 9, edges: 28 }
+stats: { nodes: 9, edges: 30 }
 ---
 
 # Source
@@ -122,14 +122,14 @@ identities.
 ## One-RTT Handshake Preserves Security
 
 ```yaml
-source: [[rescorla-2026-tls13]]
-rank: 8.5
 class: established
 confidence: 0.86
 ```
 
 *A one round-trip handshake cuts connection-setup latency without weakening the protocol's
 security guarantees.*
+
+- derivedFrom:: [[rescorla-2026-tls13]]
 
 **Assumptions**
 - Forward secrecy is preserved across the 1-RTT key schedule.
@@ -150,12 +150,12 @@ security guarantees.*
 ## Zero-RTT Replay Exposure
 
 ```yaml
-source: [[rescorla-2026-tls13]]
-rank: 9.0
 class: critical
 ```
 
 *Zero round-trip resumption lets early application data be replayed by an attacker.*
+
+- derivedFrom:: [[rescorla-2026-tls13]]
 
 **Issues**
 - Early data can be captured and re-sent to trigger duplicate side effects.

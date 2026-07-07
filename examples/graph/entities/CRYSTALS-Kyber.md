@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: CRYSTALS-Kyber
+"@id": CRYSTALS-Kyber
+"@type": entity
 category: [independent, abstract, occurrent, script]
 aliases: [Kyber, ML-KEM]
 tags: [post-quantum, cryptography]

@@ -1,8 +1,7 @@
 ---
-kind: entity
-title: ProVerif
+"@id": ProVerif
+"@type": entity
 category: [independent, physical, continuant, object]
-aliases: []
 tags: [verification, tool]
 ---
 # ProVerif

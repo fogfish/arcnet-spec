@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: Lattice Cryptography
+"@id": Lattice Cryptography
+"@type": entity
 category: [independent, abstract, continuant, schema]
 aliases: [lattice-based cryptography]
 tags: [post-quantum, cryptography, mathematics]

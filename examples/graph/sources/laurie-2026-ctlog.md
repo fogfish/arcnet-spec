@@ -1,11 +1,11 @@
 ---
-kind: source
-id: laurie-2026-ctlog
+"@id": laurie-2026-ctlog
+"@type": source
 title: "The Certificate Transparency Ecosystem"
 authors: [Ben Laurie]
 published: 2026-05-09
 url: https://example.org/ct-ecosystem
-ingested: 2026-06-13
+created: 2026-06-13
 tags: [pki, transparency, audit]
 ---
 # The Certificate Transparency Ecosystem
@@ -28,3 +28,6 @@ clients gossip to confirm a log is presenting a single consistent view.
 
 ## Cites
 - cites:: [[RFC 6962]]
+
+## generatedThought
+- generatedThought:: [[Transparency Guarantee Hinges On Gossip]]

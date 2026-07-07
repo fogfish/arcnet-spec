@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: Merkle Tree
+"@id": Merkle Tree
+"@type": entity
 category: [independent, abstract, continuant, schema]
 aliases: [hash tree]
 tags: [data-structure, cryptography]

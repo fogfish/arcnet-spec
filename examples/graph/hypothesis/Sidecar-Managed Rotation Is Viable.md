@@ -1,13 +1,13 @@
 ---
-kind: hypothesis
-title: Sidecar-Managed Rotation Is Viable
-source: [[okonkwo-2026-mtls]]
-rank: 7.8
+"@id": Sidecar-Managed Rotation Is Viable
+"@type": hypothesis
 class: extended
 confidence: 0.78
 ---
 *Delegating short-lived certificate issuance and rotation to sidecar proxies makes mTLS
 operationally viable at scale.*
+
+- derivedFrom:: [[okonkwo-2026-mtls]]
 
 **Overview:** Extends mutual TLS from a manual, brittle configuration into an automated mesh
 capability by moving certificate lifecycle management into the data-plane sidecars.

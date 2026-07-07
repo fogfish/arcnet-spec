@@ -1,13 +1,13 @@
 ---
-kind: hypothesis
-title: Public Logs Deter Mis-Issuance
-source: [[laurie-2026-ctlog]]
-rank: 7.5
+"@id": Public Logs Deter Mis-Issuance
+"@type": hypothesis
 class: extended
 confidence: 0.74
 ---
 *Publishing every issued certificate to public, append-only logs deters and exposes
 certificate mis-issuance.*
+
+- derivedFrom:: [[laurie-2026-ctlog]]
 
 **Overview:** Extends the established PKI trust model with an auditability layer: because
 mis-issued certificates become publicly visible, authorities are held accountable after the

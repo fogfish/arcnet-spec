@@ -10,7 +10,7 @@ Read the whole session and derive these node kinds:
 
        <participant-surname>-<year>-<slug-keyword>
 
-   lowercased, ASCII, hyphen-separated: the human participant's surname (`anon` if unknown), the session's year, and one or two salient words naming the session's topic. Example: `kolesnikov-2026-patch-memory`. The same session must always yield the same citekey.
+   lowercased, ASCII, hyphen-separated: the human participant's (account owner) surname (`anon` if unknown), the session's year, and one or two salient words naming the session's topic. Example: `kolesnikov-2026-patch-memory`. The same session must always yield the same citekey.
 
    The source node carries:
    - scalar fields: `title` (a concise session title), `published` (the session created date, ISO-8601), `authors` (the lastname of current account or other participants, if known), `tags` (topical tags)
@@ -41,19 +41,19 @@ Read the whole session and derive these node kinds:
      position 2: physical | abstract
      position 3: continuant | occurrent
      leaf: object | process | schema | script | juncture | participation | description | history | structure | situation | reason | purpose
-   Valid combinations (code → bag):
-     ipc:object        [independent, physical, continuant, object]
-     ipo:process       [independent, physical, occurrent, process]
-     iac:schema        [independent, abstract, continuant, schema]
-     iao:script        [independent, abstract, occurrent, script]
-     rpc:juncture      [relative, physical, continuant, juncture]
-     rpo:participation [relative, physical, occurrent, participation]
-     rac:description   [relative, abstract, continuant, description]
-     rao:history       [relative, abstract, occurrent, history]
-     mpc:structure     [mediating, physical, continuant, structure]
-     mpo:situation     [mediating, physical, occurrent, situation]
-     mac:reason        [mediating, abstract, continuant, reason]
-     mao:purpose       [mediating, abstract, occurrent, purpose]
+   Valid combinations:
+     [independent, physical, continuant, object]
+     [independent, physical, occurrent, process]
+     [independent, abstract, continuant, schema]
+     [independent, abstract, occurrent, script]
+     [relative, physical, continuant, juncture]
+     [relative, physical, occurrent, participation]
+     [relative, abstract, continuant, description]
+     [relative, abstract, occurrent, history]
+     [mediating, physical, continuant, structure]
+     [mediating, physical, occurrent, situation]
+     [mediating, abstract, continuant, reason]
+     [mediating, abstract, occurrent, purpose]
 
 3. RESOURCE — one node per EXTERNAL WORK the session pointed to but did not ingest: a paper, standard, tool, dataset, post, library, documentation page, or a topic flagged for later research. Identity is the title (the work's name).
 
@@ -111,7 +111,7 @@ A thought may link ONLY to source, entity, and resource nodes — never to any o
   - Then the node body: prose, literals, and `predicate:: [[Target]]` edges with canonical basename targets.
 - H1 and H2 are the ONLY Markdown headings in the document. Inside node bodies use **bold labels** (e.g. **Mentions**, **Concerns**), NEVER headings.
 - Every `[[wiki-link]]` target MUST exactly equal the basename of a node defined in this patch (its H2 text), except links to well-known pre-existing graph nodes are permitted when the session explicitly referenced them.
-- All predicates are camelCase. Use only: mentions, mentionedIn, cites, isCitedBy, broader, narrower, isPartOf, hasPart, requires, replaces, isReplacedBy, conformsTo, related, wasDerivedFrom, generatedThought, concerns, and the cito: citation types listed above. Do not invent predicates.
+- All predicates are camelCase. Use only: mentions, mentionedIn, cites, isCitedBy, broader, narrower, isPartOf, hasPart, requires, replaces, isReplacedBy, conformsTo, related, derivedFrom, generatedThought, concerns, and the cito: citation types listed above. Do not invent predicates.
 - The patch must be idempotent and deterministic: stable titles, stable citekey, no session-ordering artifacts ("then we…", "later the user…") in any node body.
 
 WHAT TO EXCLUDE: conversational mechanics (greetings, tool runs, false starts, retries), transient debugging detail, anything with no reuse value in a future session. If the session produced code, capture the design knowledge (decisions, principles, constraints) — not the code listing.
@@ -193,7 +193,7 @@ url: https://www.w3.org/TR/prov-o/
 status: read
 ```
 
-Supplies `wasDerivedFrom`, the provenance predicate linking thoughts back to the session source.
+Supplies `derivedFrom`, the provenance predicate linking thoughts back to the session source.
 
 **isCitedBy**
 - isCitedBy:: [[kolesnikov-2026-patch-memory]]

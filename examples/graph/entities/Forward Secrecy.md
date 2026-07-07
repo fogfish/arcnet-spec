@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: Forward Secrecy
+"@id": Forward Secrecy
+"@type": entity
 category: [independent, abstract, continuant, schema]
 aliases: [Perfect Forward Secrecy, PFS]
 tags: [cryptography, property]

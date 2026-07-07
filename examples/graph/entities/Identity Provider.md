@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: Identity Provider
+"@id": Identity Provider
+"@type": entity
 category: [independent, physical, continuant, object]
 aliases: [IdP]
 tags: [identity, access-control]

@@ -1,13 +1,13 @@
 ---
-kind: hypothesis
-title: One-RTT Handshake Preserves Security
-source: [[rescorla-2026-tls13]]
-rank: 8.5
+"@id": One-RTT Handshake Preserves Security
+"@type": hypothesis
 class: established
 confidence: 0.86
 ---
 *A one round-trip handshake cuts connection-setup latency without weakening the protocol's
 security guarantees.*
+
+- derivedFrom:: [[rescorla-2026-tls13]]
 
 **Overview:** By fixing the key-exchange parameters earlier in the negotiation, TLS 1.3
 reaches an authenticated, forward-secret state in a single round trip — a property now

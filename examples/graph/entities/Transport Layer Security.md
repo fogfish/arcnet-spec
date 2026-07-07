@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: Transport Layer Security
+"@id": Transport Layer Security
+"@type": entity
 category: [independent, abstract, occurrent, script]
 aliases: [TLS, TLS 1.3]
 tags: [cryptography, protocols]

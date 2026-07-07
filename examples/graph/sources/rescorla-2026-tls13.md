@@ -1,11 +1,11 @@
 ---
-kind: source
-id: rescorla-2026-tls13
+"@id": rescorla-2026-tls13
+"@type": source
 title: "TLS 1.3: Design and Rationale"
 authors: [Eric Rescorla]
 published: 2026-04-12
 url: https://example.org/tls13-design
-ingested: 2026-06-13
+created: 2026-06-13
 tags: [tls, protocols, handshake]
 ---
 # TLS 1.3: Design and Rationale
@@ -29,3 +29,6 @@ residual risk introduced by zero round-trip resumption.
 
 ## Cites
 - cites:: [[RFC 8446]]
+
+## generatedThought
+- generatedThought:: [[Latency Cost Justifies 1-RTT Risk]]

@@ -1,11 +1,11 @@
 ---
-kind: source
-id: gupta-2026-zerotrust
+"@id": gupta-2026-zerotrust
+"@type": source
 title: "Zero Trust Beyond the Perimeter"
 authors: [Anika Gupta]
 published: 2026-05-22
 url: https://example.org/zero-trust-perimeter
-ingested: 2026-06-13
+created: 2026-06-13
 tags: [zero-trust, identity, access-control]
 ---
 # Zero Trust Beyond the Perimeter

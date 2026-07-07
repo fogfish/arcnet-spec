@@ -1,6 +1,6 @@
 ---
-kind: entity
-title: Audit Log
+"@id": Audit Log
+"@type": entity
 category: [relative, abstract, occurrent, history]
 aliases: [append-only log]
 tags: [audit, records]
