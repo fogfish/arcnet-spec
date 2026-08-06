@@ -4,7 +4,7 @@
 
 > Revision note (0.4 → 0.5): this revision makes predicates and types **first-class, schema nodes** rather than prose vocabulary (§9), reframes the node model explicitly in RDF terms (§3, §5), and renames the identity/classification front-matter fields to the JSON-LD `@id`/ `@type` pair (§10.1) — replacing the old `kind`/`id`/`title` fields. Merge is now declared **per predicate** (§9.3), not per node kind; the old kind-level merge table is retired. This is a **breaking change**: [`ARCNET-AST.md`](ARCNET-AST.md), [`SPEC.md`](SPEC.md), [`ARCNET-DOMAIN-ARTICLE.md`](ARCNET-DOMAIN-ARTICLE.md), [`ARCNET-DOMAIN-CORE-THOUGHT.md`](ARCNET-DOMAIN-CORE-THOUGHT.md), and the example graphs under `examples/` still used the pre-0.5 `kind`/`id`/`title` fields and the kind-level merge table at the time this note was written. **Update:** `ARCNET-AST.md`, `ARCNET-DOMAIN-ARTICLE.md`, and `ARCNET-DOMAIN-CORE-THOUGHT.md` have since been brought current (see their own revision notes); `SPEC.md` and the example graphs under `examples/` still need a follow-up pass.
 >
-> Revision note (0.5 → 0.6): a `Class` node's `## Requires`/`## Recommended`/`## Optional` bullets were bare `[[predicate]]` mentions — not a clean fit for any of §5's five roles, and not themselves registered predicates as §9.1 requires everything else to be. Fixed by registering `required`/`recommended`/`optional` (role `link`, Class → Property) so those bullets read `required:: [[predicate]]` etc. like any other typed edge (§10.8). While closing that gap, also registered the remaining fields a `Property`/`Class` node's own front-matter/body already used without being registered themselves — `role`, `merge`, `label`, `aligned`, `description` (§10.8) — so the schema mechanism fully satisfies its own §16 checklist. `timeline`'s worked example was also corrected to type its `entries` bullets explicitly (`entries:: [[...]]`), matching `entries`'s own §10.7 registration as a role-`link` predicate rather than a bare mention.
+> Revision note (0.5 → 0.6): a `Class` node's `## Requires`/`## Recommended`/`## Optional` bullets were bare `[[predicate]]` mentions — not a clean fit for any of §5's five roles, and not themselves registered predicates as §9.1 requires everything else to be. Fixed by registering `required`/`recommended`/`optional` (role `link`, Class → Property) so those bullets read `required:: [[predicate]]` etc. like any other typed edge (§10.8). While closing that gap, also registered the remaining fields a `Property`/`Class` node's own front-matter/body already used without being registered themselves — `role`, `merge`, `label`, `aligned`, `description` (§10.8) — so the schema mechanism fully satisfies its own §16 checklist. `timeline`'s worked example was also corrected to type its `cites` bullets explicitly (`cites:: [[...]]`), matching `cites`'s own §10.7 registration as a role-`link` predicate rather than a bare mention.
 >
 > Revision note (0.6 → 0.7): a `Class` node's three-tier `## Requires`/`## Recommended`/`## Optional` membership was ambiguous — "recommended" gave a producer no checkable rule for when a predicate crosses from optional into expected. Simplified to two tiers: `## Requires` (MUST) and `## Optional` (MAY). The `recommended` predicate (§10.8) is retired; every predicate a type previously recommended is now either required or optional on that type, decided by whether its absence would leave the node incomplete for the graph's purpose (§11's own types show the reasoning per type).
 
@@ -97,7 +97,7 @@ Concretely:
   - prose, from `text`-role predicates;
   - inline `[[link]]`s, from `href`-role predicates — untyped mentions embedded in a `text` predicate's prose. A `text` predicate's own statement is never replaced by an embedded link, only annotated by it.
   - one heterogeneous block of `predicate:: [[Target]]` bullets, holding every `edge`-role predicate in use on this node, grouped by purpose under a bold label where that aids reading;
-  - one `## Predicate` block per `link`-role predicate in use, its bullets written exactly as `edge`-role bullets are (§8.2's list form, `predicate:: [[Target]]`) — the heading groups them for display, it does not change the bullet syntax. When a type's body consists of exactly one `link`-role predicate, the `## ` heading MAY be omitted, since the block is the entire body (e.g. `timeline`'s `entries`, §11.5).
+  - one `## Predicate` block per `link`-role predicate in use, its bullets written exactly as `edge`-role bullets are (§8.2's list form, `predicate:: [[Target]]`) — the heading groups them for display, it does not change the bullet syntax. When a type's body consists of exactly one `link`-role predicate, the `## ` heading MAY be omitted, since the block is the entire body (e.g. `timeline`'s `cites`, §11.5).
 
 A node's **type** is named by its `@type` predicate and defined by CORE (§11) or a domain profile: the type's own schema node (§9.2) fixes which predicates it requires or permits.
 
@@ -358,12 +358,17 @@ The inverse of `replaces` — an optional backlink from the superseded subject t
 
 **Associative link.** A non-hierarchical, non-compositional association between two connected subjects where none of the above applies. Last resort; prefer a specific predicate whenever one fits.
 
+#### `referencedBy`
+**role:** `edge` · **merge:** `union`
+
+**Associative link.** A non-hierarchical, non-compositional asymmetric association when the object's own node doesn't explicitly link the subject back.
+
 ### 10.6 Citation predicates
 
 A citation is a higher-order predicate: it does not assert a fact about the world, it asserts that a statement in the citing node is backed by an external work and qualifies how the work is used (§12). Used inline, at the point of the statement they support. Citation types SHOULD be drawn from the Citation Typing Ontology (`cito:`); a producer MUST select the most specific type that holds.
 
 #### `cites`
-**role:** `link` · **merge:** `union` · **aligned:** `cito:cites` / `schema:citation` · **from → to:** source → resource
+**role:** `edge` · **merge:** `union` · **aligned:** `cito:cites` / `schema:citation` · **from → to:** source → resource
 
 The general-purpose citation type; also the source's own structural link to a cited resource, recorded under its `## Cites` block.
 
@@ -507,9 +512,6 @@ A 1–2 sentence note on why the resource matters.
 **Used by:** `timeline` · **role:** `meta` · **merge:** `immutable`
 
 `yearly` or `monthly`.
-
-#### `entries`
-**Used by:** `timeline` · **role:** `link` · **merge:** `append`
 
 The `source` nodes whose `published` date falls in this period, ordered by date.
 
@@ -724,7 +726,7 @@ A production-date index of ingested documents.
 
 ## Requires
 - required:: [[granularity]]
-- required:: [[entries]]
+- required:: [[cite]]
 
 ## Optional
 - optional:: [[heading]]
@@ -738,8 +740,8 @@ granularity: monthly
 ---
 # April 2026
 
-- entries:: [[rescorla-2026-tls13]] — *TLS 1.3: Design and Rationale* (Eric Rescorla) — 2026-04-12
-- entries:: [[chen-2026-pqkex]] — *Post-Quantum Key Exchange in Practice* (Lin Chen) — 2026-04-28
+- cites:: [[rescorla-2026-tls13]] — *TLS 1.3: Design and Rationale* (Eric Rescorla) — 2026-04-12
+- cites:: [[chen-2026-pqkex]] — *Post-Quantum Key Exchange in Practice* (Lin Chen) — 2026-04-28
 ```
 
 ## 12. Citations
@@ -811,7 +813,7 @@ A tool applies a patch to a target graph:
 1. For each H2 node under each H1 type, reconstruct the node — `@type` from the H1, `meta`-role predicates from the ` ```yaml ` block, body (prose + `::` edges) as written.
 2. If the node's `@id` does not exist in the target graph, create the file: the yaml block plus `@id`/`@type` become the node's front-matter, the body is written verbatim.
 3. If it exists, apply each predicate's §9.3 merge behavior (union edges/aliases/sources; first-writer scalar fields, etc.).
-4. Update the timeline (§10.4, `entries`) from the source's `published` date.
+4. Update the timeline (§10.4, `cites`) from the source's `published` date.
 5. Commit per §13 — applying one patch is exactly one commit.
 
 A patch is **idempotent**: applying it twice yields the same graph (step 3's unions add nothing new on the second application).

@@ -1,7 +1,6 @@
 ---
-"@type": patch
+kind: patch
 document: ARCNET-DOMAIN-CORE-THOUGHT.md
-title: "DOMAIN CORE THOUGHT Schema Bootstrap"
 published: 2026-07-07
 stats: { nodes: 7, edges: 9 }
 ---
@@ -65,7 +64,10 @@ The natural next question, experiment, or line of reasoning the thought implies.
 
 # Class
 
-## thought
+## Thought
+
+```yaml
+```
 
 A node distilling the central insight, hypothesis, principle, question, direction, or decision an author draws from a body of notes.
 

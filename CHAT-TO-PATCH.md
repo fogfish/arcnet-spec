@@ -8,9 +8,9 @@ Read the whole session and derive these node kinds:
 
 1. SOURCE — exactly one node representing the session itself. Its identity is a citekey:
 
-       <participant-surname>-<year>-<slug-keyword>
+      <month>-<year>-<slug-keywords>
 
-   lowercased, ASCII, hyphen-separated: the human participant's (account owner) surname (`anon` if unknown), the session's year, and one or two salient words naming the session's topic. Example: `kolesnikov-2026-patch-memory`. The same session must always yield the same citekey.
+   lowercased, ASCII, hyphen-separated: name of the month, the session's year, and two or three salient words naming the session's topic. Example: `2026-july-patch-memory`. The same session must always yield the same citekey.
 
    The source node carries:
    - scalar fields: `title` (a concise session title), `published` (the session created date, ISO-8601), `authors` (the lastname of current account or other participants, if known), `tags` (topical tags)
@@ -22,10 +22,10 @@ Read the whole session and derive these node kinds:
 
 2. ENTITY — one node per durable SUBJECT the session worked on: a concept, system, protocol, format, technique, artifact. Include only subjects with independent identity and reuse value across sessions; skip incidental mentions.
 
-   Identity is the title: a human-readable, title-cased canonical name (≤ ~6 words), phrased so the same subject always yields the same title. If the session used several names for one subject, pick the preferred label as the title and record the others in `aliases`.
+   Identity is the name: entity name is a term as it appears in the source text that identifies a subject. If the session used several names for one subject, pick the preferred label as the title and record the others in `aliases`.
 
    Each entity carries:
-   - scalar fields: `category` (mandatory — see Sowa table below), `aliases` (if any), `tags` (optional)
+   - scalar fields: `category` (mandatory — see Sowa table below), `aliases` (if any)
    - body: a 1–3 sentence definition of the subject (what it IS, not what the session said about it)
    - semantic edges relating it to other entities/resources, choosing the MOST SPECIFIC predicate that holds, asked in this order:
        broader::      is a kind of / specialization of (concept hierarchy)
@@ -36,7 +36,7 @@ Read the whole session and derive these node kinds:
        related::      associative link — LAST RESORT only
    - **mentionedIn** — `mentionedIn:: [[<session-citekey>]]` back to the source
 
-   SOWA CATEGORY — the mandatory `category` field is a bag of exactly four words: pick one from each position, then the leaf:
+   CATEGORY (John F. Sowa's Top-Level Categories) — the mandatory `category` field is a bag of exactly four words: pick one from each position, then the leaf:
      position 1: independent | relative | mediating
      position 2: physical | abstract
      position 3: continuant | occurrent
@@ -61,8 +61,6 @@ Read the whole session and derive these node kinds:
    - scalar fields: `ref` (mandatory — one of: paper | standard | tool | dataset | post | technique | theory | platform | system | technology | language | framework | field), `url` / `authors` / `year` / `doi` when known, `status` (`read` or `backlog` — use `backlog` for things the session deferred for later study)
    - body: a 1–2 sentence relevance note (why it matters to this work)
    - **isCitedBy** — `isCitedBy:: [[<session-citekey>]]` back to the source
-
-Do NOT produce timeline nodes — a patch never carries index kinds; the apply tool derives them from the source's `published` date.
 
 # PHASE 2 — CORE THOUGHT EXTRACTION (run strictly after Phase 1)
 
@@ -92,7 +90,7 @@ A thought may link ONLY to source, entity, and resource nodes — never to any o
 
 # OUTPUT FORMAT — THE PATCH DOCUMENT (follow byte-for-byte conventions)
 
-- The document has EXACTLY ONE real YAML front-matter block — the manifest:
+- The document has EXACTLY ONE real YAML front-matter block — the manifest. The YAML front matter MUST begin with a line containing exactly three hyphen characters (---) and MUST end with a line containing exactly three hyphen characters (---).
 
       ---
       kind: patch
@@ -105,9 +103,9 @@ A thought may link ONLY to source, entity, and resource nodes — never to any o
   `kind: patch`, `document`, and `published` are mandatory; `title` and `stats` are recommended.
 
 - The body groups FULL nodes (never deltas) by kind:
-  - H1 = node kind: `# source`, `# entity`, `# resource`, `# thought` — one H1 per kind present, in that order; omit a kind with no nodes.
+  - H1 = node kind: `# Source`, `# Entity`, `# Resource`, `# Thought` — one H1 per kind present, in that order; omit a kind with no nodes.
   - H2 = node identity: `## <basename>` — one H2 per node (the citekey for the source, the title for entities, resources, and thoughts).
-  - Under each H2, first a fenced ```yaml block with the node's REMAINING scalar fields — do NOT repeat `kind` (it comes from the H1) or `title`/`id` (they come from the H2).
+  - Under each H2, first a fenced ```yaml block with the node's REMAINING scalar fields.
   - Then the node body: prose, literals, and `predicate:: [[Target]]` edges with canonical basename targets.
 - H1 and H2 are the ONLY Markdown headings in the document. Inside node bodies use **bold labels** (e.g. **Mentions**, **Concerns**), NEVER headings.
 - Every `[[wiki-link]]` target MUST exactly equal the basename of a node defined in this patch (its H2 text), except links to well-known pre-existing graph nodes are permitted when the session explicitly referenced them.
@@ -120,15 +118,15 @@ WHAT TO EXCLUDE: conversational mechanics (greetings, tool runs, false starts, r
 
 ---
 kind: patch
-document: kolesnikov-2026-patch-memory
+document: july-2026-patch-memory
 published: 2026-07-05
 title: "Designing Session Memory as ARCNET Patches"
 stats: { sources: 1, entities: 2, resources: 1, thoughts: 2, edges: 11 }
 ---
 
-# source
+# Source
 
-## kolesnikov-2026-patch-memory
+## july-2026-patch-memory
 
 ```yaml
 title: "Designing Session Memory as ARCNET Patches"
@@ -154,7 +152,7 @@ The session designed a scheme for persisting working sessions as ARCNET patch do
 - generatedThought:: [[Sessions Are Ingestable Documents]]
 - generatedThought:: [[Thoughts Carry Resumption State]]
 
-# entity
+# Entity
 
 ## Patch Document
 
@@ -168,7 +166,7 @@ A single Markdown file serializing one document's full contribution to a knowled
 - isPartOf:: [[ARCNET Core]]
 
 **mentionedIn**
-- mentionedIn:: [[kolesnikov-2026-patch-memory]]
+- mentionedIn:: [[july-2026-patch-memory]]
 
 ## Core Thought
 
@@ -181,9 +179,9 @@ The minimal generative cognitive unit distilled from a body of notes: the insigh
 - broader:: [[Patch Document]]
 
 **mentionedIn**
-- mentionedIn:: [[kolesnikov-2026-patch-memory]]
+- mentionedIn:: [[july-2026-patch-memory]]
 
-# resource
+# Resource
 
 ## PROV Ontology
 
@@ -196,14 +194,14 @@ status: read
 Supplies `derivedFrom`, the provenance predicate linking thoughts back to the session source.
 
 **isCitedBy**
-- isCitedBy:: [[kolesnikov-2026-patch-memory]]
+- isCitedBy:: [[july-2026-patch-memory]]
 
-# thought
+# Thought
 
 ## Sessions Are Ingestable Documents
 
 ```yaml
-source: [[kolesnikov-2026-patch-memory]]
+source: [[july-2026-patch-memory]]
 class: principle
 maturity: developing
 ```
@@ -228,7 +226,7 @@ Define how a future session queries the graph at startup to load relevant though
 ## Thoughts Carry Resumption State
 
 ```yaml
-source: [[kolesnikov-2026-patch-memory]]
+source: [[july-2026-patch-memory]]
 class: insight
 maturity: emerging
 ```
@@ -245,6 +243,7 @@ An abstract records what happened; a thought's open question records what remain
 
 - [ ] Exactly one front-matter block, with kind: patch, document, published.
 - [ ] One H1 per kind present; every node under the right H1; no other headings anywhere.
+- [ ] This patch allow only one of `Source`, `Entity`, `Resource`, `Thought` H1
 - [ ] No `kind` in any yaml block; no `title`/`id` repeated under an H2.
 - [ ] Source citekey is lowercase-ascii-hyphenated and equals the manifest `document`.
 - [ ] Every entity has a valid four-word Sowa category bag from the table.

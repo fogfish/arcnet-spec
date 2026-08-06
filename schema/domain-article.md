@@ -1,7 +1,6 @@
 ---
-"@type": patch
+kind: patch
 document: ARCNET-DOMAIN-ARTICLE.md
-title: "DOMAIN ARTICLE Schema Bootstrap"
 published: 2026-07-07
 stats: { nodes: 20, edges: 20 }
 ---
@@ -173,7 +172,10 @@ Asserts the subject entity verifies the target entity.
 
 # Class
 
-## hypothesis
+## Hypothesis
+
+```yaml
+```
 
 A conclusion distilled from sources.
 
@@ -191,7 +193,10 @@ A conclusion distilled from sources.
 - optional:: [[confidence]]
 - any CORE §10.6 citation predicate, as applicable
 
-## aporia
+## Aporia
+
+```yaml
+```
 
 An open problem or unresolved tension.
 
@@ -208,7 +213,10 @@ An open problem or unresolved tension.
 - optional:: [[notes]]
 - optional:: [[class]]
 
-## source
+## Source
+
+```yaml
+```
 
 **Optional**
 - optional:: [[proposes]]
