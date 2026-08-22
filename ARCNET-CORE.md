@@ -1,14 +1,20 @@
 # CORE — Markdown Knowledge Graph
 
-**Status:** Draft · **Version:** 0.7 · **Date:** 2026-07-07
+**Status:** Draft · **Version:** 0.10 · **Date:** 2026-08-21
 
 > Revision note (0.4 → 0.5): this revision makes predicates and types **first-class, schema nodes** rather than prose vocabulary (§9), reframes the node model explicitly in RDF terms (§3, §5), and renames the identity/classification front-matter fields to the JSON-LD `@id`/ `@type` pair (§10.1) — replacing the old `kind`/`id`/`title` fields. Merge is now declared **per predicate** (§9.3), not per node kind; the old kind-level merge table is retired. This is a **breaking change**: [`ARCNET-AST.md`](ARCNET-AST.md), [`SPEC.md`](SPEC.md), [`ARCNET-DOMAIN-ARTICLE.md`](ARCNET-DOMAIN-ARTICLE.md), [`ARCNET-DOMAIN-CORE-THOUGHT.md`](ARCNET-DOMAIN-CORE-THOUGHT.md), and the example graphs under `examples/` still used the pre-0.5 `kind`/`id`/`title` fields and the kind-level merge table at the time this note was written. **Update:** `ARCNET-AST.md`, `ARCNET-DOMAIN-ARTICLE.md`, and `ARCNET-DOMAIN-CORE-THOUGHT.md` have since been brought current (see their own revision notes); `SPEC.md` and the example graphs under `examples/` still need a follow-up pass.
 >
 > Revision note (0.5 → 0.6): a `Class` node's `## Requires`/`## Recommended`/`## Optional` bullets were bare `[[predicate]]` mentions — not a clean fit for any of §5's five roles, and not themselves registered predicates as §9.1 requires everything else to be. Fixed by registering `required`/`recommended`/`optional` (role `link`, Class → Property) so those bullets read `required:: [[predicate]]` etc. like any other typed edge (§10.8). While closing that gap, also registered the remaining fields a `Property`/`Class` node's own front-matter/body already used without being registered themselves — `role`, `merge`, `label`, `aligned`, `description` (§10.8) — so the schema mechanism fully satisfies its own §16 checklist. `timeline`'s worked example was also corrected to type its `cites` bullets explicitly (`cites:: [[...]]`), matching `cites`'s own §10.7 registration as a role-`link` predicate rather than a bare mention.
 >
 > Revision note (0.6 → 0.7): a `Class` node's three-tier `## Requires`/`## Recommended`/`## Optional` membership was ambiguous — "recommended" gave a producer no checkable rule for when a predicate crosses from optional into expected. Simplified to two tiers: `## Requires` (MUST) and `## Optional` (MAY). The `recommended` predicate (§10.8) is retired; every predicate a type previously recommended is now either required or optional on that type, decided by whether its absence would leave the node incomplete for the graph's purpose (§11's own types show the reasoning per type).
+>
+> Revision note (0.7 → 0.8): adds `Reference` (§11.6), a fifth core type for an external document the graph is not ingesting. It reuses three existing predicates — `title`, `url`, `authors` (§10.7) — rather than introducing new ones. This is additive, not breaking: no existing predicate, type, or merge behavior changes meaning. (§11.6's own boundary against `Resource` was corrected in 0.10, below.)
+>
+> Revision note (0.8 → 0.9): documents a naming-convention decision made previously but never written into CORE and never applied to CORE's own types: **type (class) names MUST be UpperCamelCase (PascalCase)**, distinct from predicate names, which MUST be camelCase (§8.3). The rule is now stated in §9.2. CORE's own five types are renamed accordingly: `source` → `Source`, `entity` → `Entity`, `resource` → `Resource`, `timeline` → `Timeline`, `reference` → `Reference`. Folder names (§6, e.g. `sources/`) and `@id`/citekey values are unaffected — only the `@type`/type-node `@id` string changes case. This is a **breaking change**: [`ARCNET-DOMAIN-ARTICLE.md`](ARCNET-DOMAIN-ARTICLE.md) and the example graph under [`examples/graph/`](examples/graph/) still wrote lowercase `@type` values for CORE's types at the time this note was written and need a follow-up pass.
+>
+> Revision note (0.9 → 0.10): fixes a role mix-up between `Resource` and `Reference` introduced in 0.8. `Resource` (§11.4) was wrongly defined as "an external work the graph points to but has not ingested" — that is `Reference`'s role, not `Resource`'s. `Resource` is redefined as its long-standing implementation meaning: an anonymous fragment of *ingested* content that doesn't warrant its own dedicated type, classified by `tags` so a recurring pattern can later be promoted into a proper domain type (§15) — e.g. a core thought, modeled as a tagged `Resource` before a domain profile defines its own `Thought` type. `Resource`'s Requires/Optional change from `ref`/`relevance`/`url`/`authors`/`year`/`doi`/`status`/`isCitedBy`/`notes` to `text`/`tags`/`mentionedIn` (Requires) and `notes` (Optional); those displaced predicates move to `Reference`, which now correctly owns the full "external, not-yet-ingested work" behavior (required `title`/`ref`/`relevance`; optional `url`/`authors`/`year`/`doi`/`status`/`isCitedBy`/`notes`). `mentionedIn` (§10.4) is generalized from an `Entity`-only backlink to a `Resource` one too; `cites`/`isCitedBy` (§10.6) now target `Reference` rather than `Resource`. This is a **breaking change**, on top of the still-open follow-up from 0.9: any graph, domain profile, or the example graph under [`examples/graph/`](examples/graph/) using `Resource` for external, un-ingested works must move that content to `Reference`.
 
-This document specifies the **domain-agnostic core** of a knowledge graph stored as plain Markdown: the RDF-aligned data model (§3), the node model built from it (§5), identity, folder layout, edges, the schema mechanism that makes predicates and types first-class graph nodes (§9), the core predicates and core types (`source`, `entity`, `resource`, `timeline`), citations, merge, version control, and the patch exchange format. It is **tool-agnostic** — it depends on no program, library, or language.
+This document specifies the **domain-agnostic core** of a knowledge graph stored as plain Markdown: the RDF-aligned data model (§3), the node model built from it (§5), identity, folder layout, edges, the schema mechanism that makes predicates and types first-class graph nodes (§9), the core predicates and core types (`Source`, `Entity`, `Resource`, `Timeline`, `Reference`), citations, merge, version control, and the patch exchange format. It is **tool-agnostic** — it depends on no program, library, or language.
 
 A **domain profile** (`DOMAIN-<name>.md`) extends this core with additional types and their predicate vocabulary, registered the same way CORE's own are (§9). Profiles depend on CORE; CORE never references a profile. The reference profile is [`DOMAIN-ARTICLE.md`](DOMAIN-ARTICLE.md), with a worked example under [`graph/`](graph/).
 
@@ -32,7 +38,7 @@ A node names one **subject**. Its `@id` (§10.1) is the subject's identifier; it
 ```markdown
 ---
 "@id": Transport Layer Security
-"@type": entity
+"@type": Entity
 category: [independent, abstract, occurrent, script]
 tags: [cryptography]
 ---
@@ -49,7 +55,7 @@ A [[cryptographic]] protocol that establishes an authenticated, confidential cha
 
 ```nt
 "Transport Layer Security"
-  a "entity"
+  a "Entity"
   category "independent" ; category "abstract" ; category "occurrent" ; category "script"
   tags "cryptography"
   text "A cryptographic protocol that establishes an authenticated, confidential channel over an untrusted network."
@@ -72,7 +78,7 @@ A conforming graph MUST uphold these invariants:
 2. **Identity is the `@id`.** A node's identity is its mandatory `@id` predicate, equal to the file's basename (without `.md`), unique across the whole graph (§7). Links resolve by basename, independent of folder; a node MAY be moved between folders without affecting any edge.
 3. **Edges are wiki-links.** An edge is `[[Target]]`, where `Target` is another node's basename. An edge MAY be typed by a predicate (§8).
 4. **Predicates are first class.** Every predicate used anywhere in the graph — front-matter field, body edge, or citation type — is itself a node under `_schema/predicates/` (§9.1), declaring that predicate's serialization role (§5) and merge behavior (§9.3) once, for every type that uses it.
-5. **Types are first class.** Every `@type` value in use is itself a node under `_schema/types/` (§9.2), declaring which predicates it requires or permits (§11). CORE's own types (`source`, `entity`, `resource`, `timeline`) are ordinary instances of this mechanism, not special-cased.
+5. **Types are first class.** Every `@type` value in use is itself a node under `_schema/types/` (§9.2), declaring which predicates it requires or permits (§11). CORE's own types (`Source`, `Entity`, `Resource`, `Timeline`, `Reference`) are ordinary instances of this mechanism, not special-cased.
 6. **Derived nodes carry provenance.** A node distilled from a document MUST link to the document node(s) it was derived from.
 7. **Classification is data, not location.** A node's `@type` and any other classification lives in predicates; folders MAY mirror it but MUST NOT be its sole carrier.
 8. **Append-only growth, defined merges.** Adding content creates new files or merges into existing ones per each predicate's declared merge behavior (§9.3). Merges are commutative and idempotent at the predicate level, so replay, reordering, and rollback are well-defined.
@@ -97,7 +103,7 @@ Concretely:
   - prose, from `text`-role predicates;
   - inline `[[link]]`s, from `href`-role predicates — untyped mentions embedded in a `text` predicate's prose. A `text` predicate's own statement is never replaced by an embedded link, only annotated by it.
   - one heterogeneous block of `predicate:: [[Target]]` bullets, holding every `edge`-role predicate in use on this node, grouped by purpose under a bold label where that aids reading;
-  - one `## Predicate` block per `link`-role predicate in use, its bullets written exactly as `edge`-role bullets are (§8.2's list form, `predicate:: [[Target]]`) — the heading groups them for display, it does not change the bullet syntax. When a type's body consists of exactly one `link`-role predicate, the `## ` heading MAY be omitted, since the block is the entire body (e.g. `timeline`'s `cites`, §11.5).
+  - one `## Predicate` block per `link`-role predicate in use, its bullets written exactly as `edge`-role bullets are (§8.2's list form, `predicate:: [[Target]]`) — the heading groups them for display, it does not change the bullet syntax. When a type's body consists of exactly one `link`-role predicate, the `## ` heading MAY be omitted, since the block is the entire body (e.g. `Timeline`'s `cites`, §11.5).
 
 A node's **type** is named by its `@type` predicate and defined by CORE (§11) or a domain profile: the type's own schema node (§9.2) fixes which predicates it requires or permits.
 
@@ -109,7 +115,8 @@ Each type has one folder, named after the type; nodes are filed flat within it. 
 graph/
 ├── sources/              # source nodes (one per ingested document)
 ├── entities/             # entity nodes (Sowa-typed)
-├── resources/            # resource nodes (citations, topics)
+├── resources/            # resource nodes (anonymous ingested content)
+├── references/           # reference nodes (external, not-yet-ingested works)
 ├── timeline/             # production-date index
 │   ├── yearly/           #   <YYYY>.md
 │   └── monthly/          #   <YYYY-MM>.md
@@ -128,9 +135,11 @@ graph/
 
 A node's identity is its `@id`, equal to its basename, and MUST be unique across the whole graph. Basenames for title-identified types (entities, resources, and profile types) SHOULD be human-readable, title-cased, with spaces (e.g. `Forward Secrecy`). Colliding basenames MUST be disambiguated with a parenthetical qualifier (e.g. `Handshake Protocol (TLS)`).
 
+The identity MUST NOT contains `/ \ : * ? " < > | .`
+
 ### 7.2 Source citekey
 
-A `source` node's `@id` is a citekey derived from the document's own metadata:
+A `Source` node's `@id` is a citekey derived from the document's own metadata:
 
 ```
 <first-author-surname>-<publication-year>-<slug-keyword>
@@ -140,7 +149,7 @@ lowercased, ASCII, hyphen-separated (e.g. `rescorla-2026-tls13`). `surname` is t
 
 ### 7.3 Title identity
 
-For types identified by a name or claim (entities, resources, and domain types), the `@id` is the node's title — a concise human label (≤ ~6 words for claim-like types), phrased so the same subject or claim yields the same title. Unlike `source`, these types carry no separate `title` predicate: `@id` already serves as both identity and display name.
+For types identified by a name or claim (entities, resources, and domain types), the `@id` is the node's title — a concise human label (≤ ~6 words for claim-like types), phrased so the same subject or claim yields the same title. Unlike `Source`, these types carry no separate `title` predicate: `@id` already serves as both identity and display name.
 
 ### 7.4 Aliases
 
@@ -164,7 +173,7 @@ The `::` token separates predicate from target.
 
 ### 8.3 Predicate naming and registration
 
-Predicate names MUST be **camelCase**. Every predicate in use MUST be registered as a node under `_schema/predicates/` (§9.1), aligned to a standard vocabulary term where one exists; otherwise it is graph-native (`arc:`). Producers MUST reuse a registered predicate before introducing a new one.
+Predicate names MUST be **camelCase**. Every predicate in use MUST be registered as a node under `_schema/predicates/` (§9.1), aligned to a standard vocabulary term where one exists; otherwise it is graph-native (`arc:`). Producers MUST reuse a registered predicate before introducing a new one. Type (class) names follow the complementary rule, **UpperCamelCase** (§9.2).
 
 ## 9. Schema
 
@@ -202,8 +211,10 @@ Asserts that the subject is a component or member of the whole named by the targ
 
 Every `@type` value in use MUST be registered as a node at `_schema/types/<name>.md`, declaring the predicates it requires and permits.
 
+Type names MUST be **UpperCamelCase** (PascalCase) — e.g. `Source`, `Entity`, `Reference` — the mirror image of the camelCase rule for predicate names (§8.3): predicates start lowercase, types start uppercase, so the two vocabularies are visually distinguishable wherever they appear, including bare in prose.
+
 **Front-matter**
-- `@id` (mandatory) — the type's name, equal to the basename
+- `@id` (mandatory) — the type's PascalCase name, equal to the basename
 - `@type` (mandatory) — the literal `Class`
 
 **Body**
@@ -215,10 +226,10 @@ Every type implicitly requires `@id` and `@type` (§10.1); these are never repea
 
 ```markdown
 ---
-"@id": entity
+"@id": Entity
 "@type": Class
 ---
-# entity
+# Entity
 
 A node for a subject occurring in sources, typed by Sowa category (`category`, §10.7).
 
@@ -236,21 +247,20 @@ A node for a subject occurring in sources, typed by Sowa category (`category`, �
 
 When ingesting content contributes to a node whose `@id` already exists, each predicate on that contribution is merged per its own declared `merge` value (§9.1). **All merges MUST be commutative and idempotent**, so replay, reordering, and rollback are well-defined (§13). A predicate declares exactly one of:
 
-- **`immutable`** — the first write is permanent; a later contribution to the same predicate on the same subject is a no-op. Used by identity predicates (`@id`, `@type`) and facts fixed at production time (e.g. `published`).
-- **`union`** — set-union the predicate's values across contributions, deduplicated.
-- **`firstWriteWin`** — a single-valued predicate: the first writer's value wins; a later divergent value is flagged `needsReview` rather than silently overwritten.
-- **`fillIfEmpty`** — a single-valued, optional predicate: stays absent until first written, then behaves as `firstWriteWin`.
-- **`lastWriteWin`** — a single-valued predicate whose latest write always wins — bookkeeping state that legitimately changes over time (e.g. `updated`).
-- **`append`** — grow the predicate's content without discarding what is already there: an ordered, uniquely-keyed list gets a new entry (re-insertion of an already-present entry is a no-op); a `text`-role predicate gets the new prose concatenated after the existing prose.
-- **`validatedOverwrite`** — overwritten only by a designated validation pass (last-validation-wins); used by profile predicates whose value is computed after the fact.
+- **`immutable`** — single-valued and permanently fixed by the first accepted write. Later writes cannot change it; divergent later contributions are ignored or rejected according to the conflict policy. Used by identity predicates (`@id`, `@type`) and facts fixed at production time (e.g. `published`).
+- **`union`** — merge contributions by set union. Values are deduplicated according to the predicate's equality semantics. 
+- **`firstWriteWin`** — single-valued. The first accepted write establishes the value. Later divergent contributions do not overwrite it and produce `needsReview`.
+- **`fillIfEmpty`** — single-valued and initially absent. The first write fills the value; once present, later contributions have no effect and do not produce conflicts.
+- **`lastWriteWin`** — single-valued mutable state. Each accepted write replaces the current value.
+- **`append`** — accumulate contributions without removing existing content. For keyed lists, add only previously unseen keys while preserving order; for `text` roles, append new prose according to the predicate's concatenation rules.
 
-A type-level "this node never changes after creation" behavior (e.g. `source`, owned by a single producer) is not a separate merge value — it emerges from every one of that type's predicates independently being `immutable`, reinforced procedurally by the ingestion idempotency check (§13.2).
+A type-level "this node never changes after creation" behavior (e.g. `Source`, owned by a single producer) is not a separate merge value — it emerges from every one of that type's predicates independently being `immutable`, reinforced procedurally by the ingestion idempotency check (§13.2).
 
 A domain profile MUST declare each of its own predicates' merge behavior from this menu (§14).
 
 ## 10. Core Predicates
 
-The predicates below are CORE's own `_schema/predicates/` nodes — every core type (§11) is built from this vocabulary. Following the RDFS convention of specifying each property under its own heading, one node per predicate, rather than in a shared table. A domain profile adds the predicates its own types require (§14), following the same node format (§9.1).
+The predicates below are CORE's own `_schema/predicates/` nodes — every core type (§11) is built from this vocabulary. A domain profile MAY adds the predicates its own types require (§14), following the same node format (§9.1).
 
 ### 10.1 Identity (JSON-LD core)
 
@@ -266,6 +276,12 @@ Identifies the node; equal to the basename (§7).
 
 Names the node's class — CORE's (§11) or a profile's.
 
+#### `aliases`
+**role:** `meta` · **merge:** `union`
+
+Alternative indentities (`skos:altLabel`, §7.4).
+
+
 ### 10.2 Content predicates
 
 #### `tags`
@@ -277,6 +293,65 @@ Topical tags for discoverability.
 **role:** `text` · **aligned:** `schema:text` · **merge:** `append`
 
 Generic prose predicate. Each contribution appends to the existing prose rather than overwriting it, since separate documents may each add relevant text about the same subject over time. A type MAY instead declare its own, more specific text predicate (e.g. `abstract`, `definition`, `relevance`, §10.7) when a precise name aids reading and a single, first-fixed value is wanted instead.
+
+#### `title`
+**role:** `meta` · **aligned:** `schema:title` · **merge:** `immutable`
+
+The title of document of creative work as originally published. (e.g. full article title for `Source` or `Reference`).
+
+#### `abstract`
+**role:** `text` · **aligned:** `schema:abstract` · **merge:** `firstWriteWin`
+
+An abstract is a short description that summarizes a creative work.
+
+#### `author`
+**role:** `meta` · **aligned:** `schema:author` · **merge:** `union`
+
+The author of the content.
+
+#### `url`
+**role:** `meta` · **aligned:** `schema:url` · **merge:** `fillIfEmpty`
+
+Canonical location of the document/work.
+
+#### `doi`
+**role:** `meta` · **aligned:** `schema:doi` · **merge:** `fillIfEmpty`
+
+Digital object identifier.
+
+#### `category`
+**role:** `meta` · **merge:** `firstWriteWin`
+
+Records John F. Sowa's top-level category:
+- Level 1: independent · relative · mediating
+- Level 2: physical · abstract
+- Level 3: continuant · occurrent
+- Level 4 (Leaf): object · process · schema · script · juncture · participation · description · history · structure · situation · reason · purpose
+
+The `category` predicate MUST contain the four decoded words. Below is an allowed combinations that follows John F. Sowa taxonomy 
+- `[independent, physical, continuant, object]`
+- `[independent, physical, occurrent, process]`
+- `[independent, abstract, continuant, schema]`
+- `[independent, abstract, occurrent, script]`
+- `[relative, physical, continuant, juncture]`
+- `[relative, physical, occurrent, participation]`
+- `[relative, abstract, continuant, description]`
+- `[relative, abstract, occurrent, history]`
+- `[mediating, physical, continuant, structure]`
+- `[mediating, physical, occurrent, situation]`
+- `[mediating, abstract, continuant, reason]`
+- `[mediating, abstract, occurrent, purpose]`
+
+#### `about`
+**role:** `meta` · **merge:** `union`
+
+The subject matter of an node: `technique`/`theory`/`platform`/`system`/`technology`/`language`/`framework`/`field`.
+
+#### `genre`
+**role:** `meta` · **merge:** `union`
+
+Genre of the node: `paper`/`standard`/`tool`/`dataset`/`post`.
+
 
 ### 10.3 Metadata and control predicates
 
@@ -298,18 +373,18 @@ ISO-8601 timestamp of the node's last modification.
 ### 10.4 Structural predicates (core types)
 
 #### `mentions`
-**role:** `link` · **merge:** `union` · **aligned:** `schema:mentions` · **from → to:** source → entity
+**role:** `link` · **merge:** `union` · **aligned:** `schema:mentions` · **from → to:** Source → Entity
 
 Asserts that the source document mentions the entity; recorded under the source's own `## Mentions` block.
 
 #### `mentionedIn`
-**role:** `link` · **merge:** `union` · **aligned:** `schema:subjectOf` · **from → to:** entity → source
+**role:** `link` · **merge:** `union` · **aligned:** `schema:subjectOf` · **from → to:** Entity/Resource → Source
 
-The inverse of `mentions` — recorded as a backlink under the entity's own `## mentionedIn` block.
+The inverse of `mentions` when carried by an `Entity`; more generally, any derived node's backlink to the source it was drawn from (§11.4's `Resource` uses it this way too) — recorded under the node's own `## Mentioned In` block.
 
-### 10.5 Semantic predicates (entity ↔ entity / resource)
+### 10.5 Semantic predicates (entity ↔ entity / reference)
 
-Semantic predicates relate one **entity** to another entity or resource. They are written as `edge`-role predicates in the entity body and assert how two subjects relate **in the world**, independent of any document. Choose the **most specific** predicate that holds; fall back to `related` only when none of the others fit. Inverses are optional backlinks — assert the direction natural to the node you are writing and let tooling derive the rest.
+Semantic predicates relate one **entity** to another entity or reference. They are written as `edge`-role predicates in the entity body and assert how two subjects relate **in the world**, independent of any document. Choose the **most specific** predicate that holds; fall back to `related` only when none of the others fit. Inverses are optional backlinks — assert the direction natural to the node you are writing and let tooling derive the rest.
 
 Choosing: ask in order — is it a *kind of* (`broader`), a *part of* (`isPartOf`), a *dependency* (`requires`), a *successor of* (`replaces`), *conformance to a standard* (`conformsTo`)? Only if none hold, use `related`.
 
@@ -351,7 +426,7 @@ The inverse of `replaces` — an optional backlink from the superseded subject t
 #### `conformsTo`
 **role:** `edge` · **merge:** `union` · **aligned:** `dcterms:conformsTo`
 
-**Standard adherence.** `X conformsTo:: [[Y]]` asserts X complies with a named specification or schema Y (typically a resource). *e.g.* `Transport Layer Security` → `conformsTo:: [[RFC 8446]]`.
+**Standard adherence.** `X conformsTo:: [[Y]]` asserts X complies with a named specification or schema Y (typically a reference). *e.g.* `Transport Layer Security` → `conformsTo:: [[RFC 8446]]`.
 
 #### `related`
 **role:** `edge` · **merge:** `union` · **aligned:** `skos:related`
@@ -368,9 +443,9 @@ The inverse of `replaces` — an optional backlink from the superseded subject t
 A citation is a higher-order predicate: it does not assert a fact about the world, it asserts that a statement in the citing node is backed by an external work and qualifies how the work is used (§12). Used inline, at the point of the statement they support. Citation types SHOULD be drawn from the Citation Typing Ontology (`cito:`); a producer MUST select the most specific type that holds.
 
 #### `cites`
-**role:** `edge` · **merge:** `union` · **aligned:** `cito:cites` / `schema:citation` · **from → to:** source → resource
+**role:** `edge` · **merge:** `union` · **aligned:** `cito:cites` / `schema:citation` · **from → to:** Source → Reference
 
-The general-purpose citation type; also the source's own structural link to a cited resource, recorded under its `## Cites` block.
+The general-purpose citation type; also the source's own structural link to a cited reference, recorded under its `## Cites` block.
 
 #### `citesAsEvidence`
 **role:** `edge` · **merge:** `union` · **aligned:** `cito:citesAsEvidence`
@@ -413,112 +488,10 @@ The citing statement disputes claims in the target.
 The citing statement refutes claims in the target.
 
 #### `isCitedBy`
-**role:** `link` · **merge:** `union` · **aligned:** `cito:isCitedBy` · **from → to:** resource → node
+**role:** `link` · **merge:** `union` · **aligned:** `cito:isCitedBy` · **from → to:** Reference → node
 
 The inverse of any citation predicate — recorded as a backlink under the cited node's own `## isCitedBy` block.
 
-### 10.7 Type-specific predicates
-
-Predicates used by exactly the core types named below, rather than shared across every type the way §10.1–§10.3 are.
-
-#### `title`
-**Used by:** `source` · **role:** `meta` · **merge:** `immutable`
-
-The document title as published — distinct from `@id` when `@id` is a derived citekey (§7.2).
-
-#### `abstract`
-**Used by:** `source` · **role:** `text` · **merge:** `firstWriteWin`
-
-A short prose summary of the document.
-
-#### `authors`
-**Used by:** `source`, `resource` · **role:** `meta` · **merge:** `union`
-
-Ordered list of author names.
-
-#### `url`
-**Used by:** `source`, `resource` · **role:** `meta` · **merge:** `fillIfEmpty`
-
-Canonical location of the document/work.
-
-#### `doi`
-**Used by:** `resource` · **role:** `meta` · **merge:** `fillIfEmpty`
-
-Digital object identifier.
-
-#### `category`
-**Used by:** `entity` · **role:** `meta` · **merge:** `firstWriteWin`
-
-Records John F. Sowa's top-level category, identified by a three-letter code and a leaf name (e.g. `ipc:object`), **decoded into a bag of words**. The three letters decode by position; the leaf name is appended:
-
-- Position 1 — `i` independent · `r` relative · `m` mediating
-- Position 2 — `p` physical · `a` abstract
-- Position 3 — `c` continuant · `o` occurrent
-- Leaf — object · process · schema · script · juncture · participation · description · history · structure · situation · reason · purpose
-
-The full code-to-word mapping:
-
-- `ipc:object` → `[independent, physical, continuant, object]`
-- `ipo:process` → `[independent, physical, occurrent, process]`
-- `iac:schema` → `[independent, abstract, continuant, schema]`
-- `iao:script` → `[independent, abstract, occurrent, script]`
-- `rpc:juncture` → `[relative, physical, continuant, juncture]`
-- `rpo:participation` → `[relative, physical, occurrent, participation]`
-- `rac:description` → `[relative, abstract, continuant, description]`
-- `rao:history` → `[relative, abstract, occurrent, history]`
-- `mpc:structure` → `[mediating, physical, continuant, structure]`
-- `mpo:situation` → `[mediating, physical, occurrent, situation]`
-- `mac:reason` → `[mediating, abstract, continuant, reason]`
-- `mao:purpose` → `[mediating, abstract, occurrent, purpose]`
-
-The `category` predicate MUST contain the four decoded words. A consumer MAY recompose the code.
-
-#### `aliases`
-**Used by:** `entity` · **role:** `meta` · **merge:** `union`
-
-Alternative names (`skos:altLabel`, §7.4).
-
-#### `definition`
-**Used by:** `entity` · **role:** `text` · **merge:** `firstWriteWin`
-
-A 1–3 sentence definition of the subject.
-
-#### `notes`
-**Used by:** `entity`, `resource` · **role:** `text` · **merge:** `firstWriteWin`
-
-Additional prose.
-
-#### `ref`
-**Used by:** `resource` · **role:** `meta` · **merge:** `immutable`
-
-Resource type: a citable work (`paper`/`standard`/`tool`/`dataset`/`post`) or a topic/area (`technique`/`theory`/`platform`/`system`/`technology`/`language`/`framework`/`field`); a profile MAY extend the set.
-
-#### `year`
-**Used by:** `resource` · **role:** `meta` · **merge:** `fillIfEmpty`
-
-Year of publication.
-
-#### `status`
-**Used by:** `resource` · **role:** `meta` · **merge:** `lastWriteWin`
-
-`read` or `backlog` — a `backlog` resource is a research target.
-
-#### `relevance`
-**Used by:** `resource` · **role:** `text` · **merge:** `firstWriteWin`
-
-A 1–2 sentence note on why the resource matters.
-
-#### `granularity`
-**Used by:** `timeline` · **role:** `meta` · **merge:** `immutable`
-
-`yearly` or `monthly`.
-
-The `source` nodes whose `published` date falls in this period, ordered by date.
-
-#### `heading`
-**Used by:** `timeline` · **role:** `meta` · **merge:** `firstWriteWin`
-
-A human-readable title for the period, shown as H1 in place of the bare `@id` (period code).
 
 ### 10.8 Schema predicates
 
@@ -545,7 +518,7 @@ Human-readable title shown as a `link`-role predicate's `## ` heading; defaults 
 The standard-vocabulary term this predicate maps to (e.g. `dcterms:isPartOf`), or `arc:<name>` if graph-native.
 
 #### `description`
-**Used by:** `Property`, `Class` · **role:** `text` · **merge:** `firstWriteWin`
+**role:** `text` · **merge:** `firstWriteWin`
 
 Prose describing the predicate's or type's meaning — the body text of a `Property`/`Class` node.
 
@@ -565,18 +538,18 @@ Asserts that the class permits the target predicate. Recorded under the class's 
 
 Every node, regardless of type, carries the two JSON-LD predicates (§10.1): `@id` and `@type`. A type's own `## Requires`/`## Optional` lists (§9.2) never repeat these two — they are universal.
 
-### 11.2 `source`
+### 11.2 `Source`
 
-A node for one ingested document — the provenance origin other nodes derive from. **Identity:** citekey (§7.2).
+A node for one ingested document. The origin of all other nodes is derived from (**Identity:** citekey (§7.2).). The node exists becuase of the source. 
 
 ```markdown
 ---
-"@id": source
+"@id": Source
 "@type": Class
 ---
-# source
+# Source
 
-A node for one ingested document — the provenance origin other nodes derive from.
+A node for one ingested document.
 
 ## Requires
 - required:: [[title]]
@@ -592,14 +565,12 @@ A node for one ingested document — the provenance origin other nodes derive fr
 - optional:: [[doi]]
 ```
 
-`mentions` is required because ingesting a document that names no entity contributes nothing a subject-graph can use; `authors`/`url` are optional since a document's authorship or canonical location is not always known (§7.2's citekey rule already allows `anon`), and `cites` is optional since not every document cites an external work.
-
 A domain profile MAY add navigation blocks linking the document to its own derived types (e.g. `## Proposes`, `## Raises`).
 
 ```markdown
 ---
 "@id": rescorla-2026-tls13
-"@type": source
+"@type": Source
 title: "TLS 1.3: Design and Rationale"
 authors: [Eric Rescorla]
 published: 2026-04-12
@@ -615,19 +586,19 @@ A design retrospective on the TLS 1.3 handshake and the residual risk of zero ro
 - mentions:: [[Forward Secrecy]]
 
 ## Cites
-- cites:: [[RFC 8446]]
+- cites:: [[rescorla-2018-rfc8446]]
 ```
 
-### 11.3 `entity`
+### 11.3 `Entity`
 
 A node for a subject occurring in sources, typed by Sowa category (`category`, §10.7). **Identity:** `@id` + alias table (§7.3, §7.4).
 
 ```markdown
 ---
-"@id": entity
+"@id": Entity
 "@type": Class
 ---
-# entity
+# Entity
 
 A node for a subject occurring in sources, typed by Sowa category (`category`, §10.7).
 
@@ -643,12 +614,10 @@ A node for a subject occurring in sources, typed by Sowa category (`category`, �
 - any §10.5 semantic predicate, as applicable
 ```
 
-`mentionedIn` is required per invariant 6 (§4) — an entity exists only because some source mentions it, so the backlink to at least that source MUST already hold.
-
 ```markdown
 ---
 "@id": Transport Layer Security
-"@type": entity
+"@type": Entity
 category: [independent, abstract, occurrent, script]
 aliases: [TLS, TLS 1.3]
 tags: [cryptography]
@@ -664,78 +633,63 @@ A cryptographic protocol that establishes an authenticated, confidential channel
 - mentionedIn:: [[rescorla-2026-tls13]]
 ```
 
-### 11.4 `resource`
+### 11.4 `Resource`
 
-A node for an external work the graph points to but has not ingested, or a topic/area tracked for reading or research. Distinct from a `source` (ingested, derived *from*) and an `entity` (a subject the content is *about*). **Identity:** `@id` (§7.3).
+A node for a fragment of an ingested document's content that is relevant to the graph but does not warrant its own dedicated type. It is an anonymous, tag-classified catch-all that lets a domain's type vocabulary grow incrementally. For example, before a domain profile defines its own `Thought` type, an extracted core thought can be captured as a `Resource` tagged `tags: [thoughts]`; once that pattern stabilizes, the tag identifies exactly the set of nodes to promote into a proper type (§15). Distinct from an `Entity` (a named subject with identity and semantics of its own, §11.3) and a `Reference` (an external work the graph has not ingested, §11.6): a `Resource` is itself ingested content, filed and given provenance the same way an `Entity` is. **Identity:** `@id` (§7.3).
 
 ```markdown
 ---
-"@id": resource
+"@id": Resource
 "@type": Class
 ---
-# resource
+# Resource
 
-A node for an external work the graph points to but has not ingested, or a topic/area tracked for reading or research.
+A fragment of an ingested document's content that is relevant to the graph but does not warrant its own dedicated type.
 
 ## Requires
-- required:: [[ref]]
-- required:: [[relevance]]
+- required:: [[text]]
+- required:: [[tags]]
+- required:: [[mentionedIn]]
 
 ## Optional
-- optional:: [[url]]
-- optional:: [[isCitedBy]]
-- optional:: [[authors]]
-- optional:: [[year]]
-- optional:: [[doi]]
-- optional:: [[status]]
 - optional:: [[notes]]
 ```
 
-`relevance` is required for the same reason `source.abstract`/`entity.definition` are: a resource with no stated reason to matter isn't yet worth having filed. `isCitedBy` is optional — a `backlog` resource (`status`, §10.7) legitimately exists before anything cites it.
-
 ```markdown
 ---
-"@id": RFC 8446
-"@type": resource
-ref: standard
-authors: [Eric Rescorla]
-year: 2018
-url: https://www.rfc-editor.org/rfc/rfc8446
-status: read
+"@id": Sessions Are Ingestable Documents
+"@type": Resource
+tags: [thoughts]
 ---
-# RFC 8446 — The Transport Layer Security (TLS) Protocol Version 1.3
+# Sessions Are Ingestable Documents
 
-The normative specification of TLS 1.3.
+A work session and an ingested document share the same shape: both produce durable subjects and citable claims, so both can be captured by the same patch format.
 
-## isCitedBy
-- isCitedBy:: [[rescorla-2026-tls13]]
+## mentionedIn
+- mentionedIn:: [[rescorla-2026-tls13]]
 ```
 
-### 11.5 `timeline`
+### 11.5 `Timeline`
 
 A production-date index of ingested documents (not a change log — that is git, §13). **Identity:** the period code (§7.1), `YYYY` or `YYYY-MM`.
 
 ```markdown
 ---
-"@id": timeline
+"@id": Timeline
 "@type": Class
 ---
-# timeline
+# Timeline
 
 A production-date index of ingested documents.
 
 ## Requires
-- required:: [[granularity]]
-- required:: [[cite]]
-
-## Optional
-- optional:: [[heading]]
+- required:: [[cites]]
 ```
 
 ```markdown
 ---
 "@id": 2026-04
-"@type": timeline
+"@type": Timeline
 granularity: monthly
 ---
 # April 2026
@@ -744,13 +698,53 @@ granularity: monthly
 - cites:: [[chen-2026-pqkex]] — *Post-Quantum Key Exchange in Practice* (Lin Chen) — 2026-04-28
 ```
 
+### 11.6 `Reference`
+
+A node for an external work the graph points to but has not ingested, or a topic/area tracked for reading or research — never ingested, unlike `Source` (§11.2), and unlike `Resource` (§11.4) never itself content drawn out of a document: it records only enough to identify, locate, and justify keeping the pointer. **Identity** is the document name established by authors.  
+
+
+```markdown
+---
+"@id": Reference
+"@type": Class
+---
+# Reference
+
+A node for an external work the graph points to but has not ingested, or a topic/area tracked for reading or research.
+
+## Requires
+- required:: [[title]]
+
+## Optional
+- optional:: [[url]]
+- optional:: [[authors]]
+- optional:: [[year]]
+- optional:: [[doi]]
+- optional:: [[isCitedBy]]
+```
+
+```markdown
+---
+"@id": The Transport Layer Security (TLS) Protocol Version 1.3
+"@type": Reference
+title: "The Transport Layer Security (TLS) Protocol Version 1.3"
+ref: standard
+authors: [Eric Rescorla]
+year: 2018
+url: https://www.rfc-editor.org/rfc/rfc8446
+status: read
+---
+# The Transport Layer Security (TLS) Protocol Version 1.3
+
+The normative specification of TLS 1.3.
+
+## isCitedBy
+- isCitedBy:: [[rescorla-2026-tls13]]
+```
+
 ## 12. Citations
 
-A **citation is a higher-order predicate**: it does not assert a fact about the world, it asserts that a statement in this node is backed by an external work and qualifies how the work is used. Citations are recorded **inline, at the point of the statement they support** (§10.6); the graph defines no global bibliography.
-
-- The subject is the citing node (or a specific assertion in its body); the target is a node representing an external work; the predicate is a citation type from §10.6.
-- A producer MUST select the most specific citation type that holds.
-- **Mandatory:** a registered citation-type predicate and a `[[wiki-link]]` target, in the body of the citing node. **Recommended:** placement adjacent to the supported statement and recording the inverse `isCitedBy` on the target.
+A **citation is a higher-order predicate**: it does not assert a fact about the world, it asserts that a statement in this node is backed by an external work and qualifies how the work is used. Citations are defined as `Reference` nodes in the graph.
 
 ## 13. Version Control
 
@@ -758,17 +752,17 @@ Git **MUST** be used as the version-control system. No other system is used. Git
 
 ### 13.1 One document, one commit
 
-Ingesting a document is exactly one commit containing its entire contribution: the new `source` node, any new nodes, merged predicates on existing nodes (§9.3), and the timeline entries for the document's `published` period.
+Ingesting a document is exactly one commit containing its entire contribution: the new `Source` node, any new nodes, merged predicates on existing nodes (§9.3), and the timeline entries for the document's `published` period.
 
 ### 13.2 Operations
 
 - **Ingest** — `git add -A` then `git commit -F <msg>` (§13.3)
-- **Retract** — `git revert <commit>`
 - **Locate commit** — `git log --grep=<id>`
 - **Node history** — `git log --follow -- '<path-to-node>'`
 - **Idempotency** — before ingesting, check `git ls-files --error-unmatch sources/<id>.md` — skip if present
 
-Because each contribution is additive (§9.3), `git revert` resolves shared-node edits with a standard three-way merge.
+The **retract** via `git revert <commit>` is only applicable to the latest commit. The retraction of the Source in the middle of change history requires analysis of node changes and it is allowed only if YAML metadata has not been created by this Source. If node has been merged from multiple sources git revert can remove YAML forntmatter that cause corruption of the node. 
+
 
 ### 13.3 Commit message format
 
@@ -789,7 +783,7 @@ Source-Id: <id>
 
 ## 14. Document Patch (Exchange Format)
 
-A **patch** is a single Markdown file that serializes one document's entire contribution. A tool produces a patch from a document (an alternative output mode to writing the graph directly); a patch is shareable and is applied to any graph by a tool. A patch is a **parallel exchange serialization, not part of the graph**: never indexed as a node, never stored under `graph/`, never extracted from an existing graph.
+A **patch** is a single Markdown file that serializes one document's entire contribution. A tool produces a patch from a document (an alternative output mode to writing the graph directly); a patch is shareable and is applied to any graph by a tool. A patch is a **parallel exchange serialization, not part of the graph**: never indexed as a node, never stored under `graph/`.
 
 ### 14.1 Properties
 
@@ -804,7 +798,7 @@ A **patch** is a single Markdown file that serializes one document's entire cont
   - **H2 = node's `@id`** — `## <basename>`; one per node. `@type` comes from the H1 and `@id` from the H2; neither is repeated below.
   - **Under each H2:** a fenced ` ```yaml ` block with the node's remaining predicates with role `meta`; then the node body (prose + `::` edges with canonical `[[Node]]` targets).
   - Markdown headings are reserved for type and identity; node bodies use bold labels, never headings.
-- Index types (`timeline`) are not carried; the apply tool derives them from the source's metadata.
+- Index types (`Timeline`) are not carried; the apply tool derives them from the source's metadata.
 
 ### 14.3 Apply
 
@@ -834,11 +828,11 @@ A profile MUST NOT redefine CORE mechanism (identity, edges, citations, the sche
 
 - [ ] Every file is one node with valid YAML front-matter and mandatory `@id`/`@type` (§10.1).
 - [ ] Every basename equals its node's `@id`, is unique and human-readable; every `[[link]]` resolves to a basename (§7).
-- [ ] Every `source`'s `@id` is a citekey equal to its basename (§7.2).
-- [ ] Every `entity` has a four-word decoded Sowa `category` (§10.7).
+- [ ] Every `Source`'s `@id` is a citekey equal to its basename (§7.2).
+- [ ] Every `Entity` has a four-word decoded Sowa `category` (§10.7).
 - [ ] Every derived node links to its source(s) (§4.6).
 - [ ] Every predicate is camelCase and registered as a `_schema/predicates/` node (§8.3, §9.1).
-- [ ] Every `@type` in use is registered as a `_schema/types/` node declaring its Requires/Optional predicates (§9.2).
+- [ ] Every `@type` in use is UpperCamelCase and registered as a `_schema/types/` node declaring its Requires/Optional predicates (§9.2).
 - [ ] Every citation uses a registered citation-type predicate in the body (§12).
 - [ ] Each predicate's merge behavior is one of the §9.3 menu and is commutative/idempotent.
 - [ ] Each document was ingested as exactly one git commit (§13).
