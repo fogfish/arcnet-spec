@@ -792,13 +792,47 @@ A **patch** is a single Markdown file that serializes one document's entire cont
 
 ### 14.2 Structure
 
-- **Front-matter (manifest)** — the single real front-matter block. **Mandatory:** `@type: patch`; `document` (the source id); `published`. **Recommended:** `title`; `stats`.
-- **Body — node sections grouped by type:**
-  - **H1 = node's `@type`** — `# <Type>` (case-insensitive); one per type present.
-  - **H2 = node's `@id`** — `## <basename>`; one per node. `@type` comes from the H1 and `@id` from the H2; neither is repeated below.
-  - **Under each H2:** a fenced ` ```yaml ` block with the node's remaining predicates with role `meta`; then the node body (prose + `::` edges with canonical `[[Node]]` targets).
-  - Markdown headings are reserved for type and identity; node bodies use bold labels, never headings.
-- Index types (`Timeline`) are not carried; the apply tool derives them from the source's metadata.
+A patch's Markdown consists of (i) a YAML front-matter **manifest**, carrying metadata about the patch itself, and (ii) a **graph body**, a Markdown document containing the nodes.
+
+The exchange format does not carry index types (`Timeline`); the apply tool derives them from the source's metadata.
+
+#### 14.2.1 Manifest
+
+**Mandatory:** `@type: patch`; `document` (the source id); `published`.
+
+**Recommended:** `title`; `stats`. These `title`/`published` are a convenience copy of the `Source` node's own predicates, for previewing the patch without opening its body. Per §14.1 every node section, including the `Source` node's, MUST still carry its own predicates in full.
+
+#### 14.2.2 Graph body
+
+All graph nodes are grouped by type under an H1, each node its own H2 subsection.
+
+**H1 = node's `@type`** is `# <Type>` (case-insensitive); one per type present.
+**H2 = node's `@id`** is `## <basename>`; one per node. `@type` comes from the H1 and `@id` from the H2; neither is repeated below.
+
+**Under each H2:** a fenced ` ```yaml ` block with the node's remaining predicates with role `meta` (i.e. every `meta`-role predicate other than `@id`/`@type`, which the H1/H2 already supply — including any predicate also mirrored in the manifest); then the node body:
+
+- The node's `text`-role predicate renders as a plain paragraph, unlabeled — a paragraph with no bold label prefix is always the `text`-role predicate (§5).
+- Every `link`-role predicate in use renders as its own block: a bold label (the predicate's `label`, §10.8, or its name capitalized) followed by its `predicate:: [[Target]]` bullets — the bold-label equivalent of the graph's `## Predicate` block (§5), since headings are reserved for type and identity here.
+- `edge`-role predicates render as `predicate:: [[Target]]` bullets, one heterogeneous block per node; a bold label MAY be added where it aids reading (§5), but is not required per bullet.
+
+Markdown headings are reserved for type and identity; node bodies use bold labels, never headings.
+
+```markdown
+## SSL Protocol
+
+\`\`\`yaml
+category: [independent, abstract, occurrent, script]
+aliases: [SSL, Secure Sockets Layer]
+tags: [cryptography, protocols, legacy]
+\`\`\`
+
+The predecessor secure-channel protocol that TLS replaced.
+
+- broader:: [[Handshake Protocol]]
+
+**Mentioned in**
+- mentionedIn:: [[rescorla-2026-tls13]]
+```
 
 ### 14.3 Apply
 

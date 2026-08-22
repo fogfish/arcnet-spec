@@ -11,6 +11,7 @@ stats: { nodes: 9, edges: 30 }
 ## rescorla-2026-tls13
 
 ```yaml
+title: "TLS 1.3: Design and Rationale"
 published: 2026-04-12
 authors: [Eric Rescorla]
 url: https://example.org/tls13-design
@@ -168,7 +169,7 @@ class: critical
 **Addressed by**
 - addressedBy:: [[One-RTT Handshake Preserves Security]]
 
-# Resource
+# Reference
 
 ## RFC 8446
 
