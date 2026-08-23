@@ -1,20 +1,22 @@
 # CORE — Markdown Knowledge Graph
 
-**Status:** Draft · **Version:** 0.11 · **Date:** 2026-08-23
+**Status:** Draft · **Version:** 0.12 · **Date:** 2026-08-23
 
 > Revision note (0.4 → 0.5): this revision makes predicates and types **first-class, schema nodes** rather than prose vocabulary (§9), reframes the node model explicitly in RDF terms (§3, §5), and renames the identity/classification front-matter fields to the JSON-LD `@id`/ `@type` pair (§10.1) — replacing the old `kind`/`id`/`title` fields. Merge is now declared **per predicate** (§9.3), not per node kind; the old kind-level merge table is retired. This is a **breaking change**: [`ARCNET-AST.md`](ARCNET-AST.md), [`SPEC.md`](SPEC.md), [`ARCNET-DOMAIN-ARTICLE.md`](ARCNET-DOMAIN-ARTICLE.md), [`ARCNET-DOMAIN-CORE-THOUGHT.md`](ARCNET-DOMAIN-CORE-THOUGHT.md), and the example graphs under `examples/` still used the pre-0.5 `kind`/`id`/`title` fields and the kind-level merge table at the time this note was written. **Update:** `ARCNET-AST.md`, `ARCNET-DOMAIN-ARTICLE.md`, and `ARCNET-DOMAIN-CORE-THOUGHT.md` have since been brought current (see their own revision notes); `SPEC.md` and the example graphs under `examples/` still need a follow-up pass.
 >
-> Revision note (0.5 → 0.6): a `Class` node's `## Requires`/`## Recommended`/`## Optional` bullets were bare `[[predicate]]` mentions — not a clean fit for any of §5's five roles, and not themselves registered predicates as §9.1 requires everything else to be. Fixed by registering `required`/`recommended`/`optional` (role `link`, Class → Property) so those bullets read `required:: [[predicate]]` etc. like any other typed edge (§10.8). While closing that gap, also registered the remaining fields a `Property`/`Class` node's own front-matter/body already used without being registered themselves — `role`, `merge`, `label`, `aligned`, `description` (§10.8) — so the schema mechanism fully satisfies its own §16 checklist. `timeline`'s worked example was also corrected to type its `cites` bullets explicitly (`cites:: [[...]]`), matching `cites`'s own §10.7 registration as a role-`link` predicate rather than a bare mention.
+> Revision note (0.5 → 0.6): a `Class` node's `## Requires`/`## Recommended`/`## Optional` bullets were bare `[[predicate]]` mentions — not a clean fit for any of §5's five roles, and not themselves registered predicates as §9.1 requires everything else to be. Fixed by registering `required`/`recommended`/`optional` (role `link`, Class → Property) so those bullets read `required:: [[predicate]]` etc. like any other typed edge (§10.7). While closing that gap, also registered the remaining fields a `Property`/`Class` node's own front-matter/body already used without being registered themselves — `role`, `merge`, `label`, `aligned`, `description` (§10.7) — so the schema mechanism fully satisfies its own §16 checklist. `timeline`'s worked example was also corrected to type its `cites` bullets explicitly (`cites:: [[...]]`), matching `cites`'s own §10.6 registration as a role-`link` predicate rather than a bare mention.
 >
-> Revision note (0.6 → 0.7): a `Class` node's three-tier `## Requires`/`## Recommended`/`## Optional` membership was ambiguous — "recommended" gave a producer no checkable rule for when a predicate crosses from optional into expected. Simplified to two tiers: `## Requires` (MUST) and `## Optional` (MAY). The `recommended` predicate (§10.8) is retired; every predicate a type previously recommended is now either required or optional on that type, decided by whether its absence would leave the node incomplete for the graph's purpose (§11's own types show the reasoning per type).
+> Revision note (0.6 → 0.7): a `Class` node's three-tier `## Requires`/`## Recommended`/`## Optional` membership was ambiguous — "recommended" gave a producer no checkable rule for when a predicate crosses from optional into expected. Simplified to two tiers: `## Requires` (MUST) and `## Optional` (MAY). The `recommended` predicate (§10.7) is retired; every predicate a type previously recommended is now either required or optional on that type, decided by whether its absence would leave the node incomplete for the graph's purpose (§11's own types show the reasoning per type).
 >
-> Revision note (0.7 → 0.8): adds `Reference` (§11.6), a fifth core type for an external document the graph is not ingesting. It reuses three existing predicates — `title`, `url`, `authors` (§10.7) — rather than introducing new ones. This is additive, not breaking: no existing predicate, type, or merge behavior changes meaning. (§11.6's own boundary against `Resource` was corrected in 0.10, below.)
+> Revision note (0.7 → 0.8): adds `Reference` (§11.6), a fifth core type for an external document the graph is not ingesting. It reuses three existing predicates — `title`, `url`, `author` (§10.2) — rather than introducing new ones. This is additive, not breaking: no existing predicate, type, or merge behavior changes meaning. (§11.6's own boundary against `Resource` was corrected in 0.10, below.)
 >
 > Revision note (0.8 → 0.9): documents a naming-convention decision made previously but never written into CORE and never applied to CORE's own types: **type (class) names MUST be UpperCamelCase (PascalCase)**, distinct from predicate names, which MUST be camelCase (§8.3). The rule is now stated in §9.2. CORE's own five types are renamed accordingly: `source` → `Source`, `entity` → `Entity`, `resource` → `Resource`, `timeline` → `Timeline`, `reference` → `Reference`. Folder names (§6, e.g. `sources/`) and `@id`/citekey values are unaffected — only the `@type`/type-node `@id` string changes case. This is a **breaking change**: [`ARCNET-DOMAIN-ARTICLE.md`](ARCNET-DOMAIN-ARTICLE.md) and the example graph under [`examples/graph/`](examples/graph/) still wrote lowercase `@type` values for CORE's types at the time this note was written and need a follow-up pass.
 >
 > Revision note (0.9 → 0.10): fixes a role mix-up between `Resource` and `Reference` introduced in 0.8. `Resource` (§11.4) was wrongly defined as "an external work the graph points to but has not ingested" — that is `Reference`'s role, not `Resource`'s. `Resource` is redefined as its long-standing implementation meaning: an anonymous fragment of *ingested* content that doesn't warrant its own dedicated type, classified by `tags` so a recurring pattern can later be promoted into a proper domain type (§15) — e.g. a core thought, modeled as a tagged `Resource` before a domain profile defines its own `Thought` type. `Resource`'s Requires/Optional change from `ref`/`relevance`/`url`/`authors`/`year`/`doi`/`status`/`isCitedBy`/`notes` to `text`/`tags`/`mentionedIn` (Requires) and `notes` (Optional); those displaced predicates move to `Reference`, which now correctly owns the full "external, not-yet-ingested work" behavior (required `title`/`ref`/`relevance`; optional `url`/`authors`/`year`/`doi`/`status`/`isCitedBy`/`notes`). `mentionedIn` (§10.4) is generalized from an `Entity`-only backlink to a `Resource` one too; `cites`/`isCitedBy` (§10.6) now target `Reference` rather than `Resource`. This is a **breaking change**, on top of the still-open follow-up from 0.9: any graph, domain profile, or the example graph under [`examples/graph/`](examples/graph/) using `Resource` for external, un-ingested works must move that content to `Reference`.
 >
 > Revision note (0.10 → 0.11): tightens §6 into a machine-checkable rule. Folder names were plural, lowercase, and sometimes unrelated to the type they held (`sources/` for `Source`, `_schema/types/` for `Class`), forcing every consumer to carry its own pluralization/case-folding table to get from a folder to a `@type` value. A type folder's name MUST now be **character-for-character identical to the type name** (§6), so folder ↔ type is string equality. CORE's folders are renamed accordingly: `sources/` → `Source/`, `entities/` → `Entity/`, `resources/` → `Resource/`, `references/` → `Reference/`, `_schema/predicates/` → `_schema/Property/`, `_schema/types/` → `_schema/Class/`. `_schema/` (a namespace prefix) and `timeline/` (a bucketed index, §11.5) are the two exempt non-type folders. Nothing about `@id`, `@type`, predicates, or merge behavior changes — only where nodes are filed — and because links resolve by basename (§4.2), no edge breaks. It is still a **breaking change** for any tool that hardcodes folder paths, and a re-filing pass for existing graphs. Domain profiles ([`ARCNET-DOMAIN-ARTICLE.md`](ARCNET-DOMAIN-ARTICLE.md), [`ARCNET-DOMAIN-CORE-THOUGHT.md`](ARCNET-DOMAIN-CORE-THOUGHT.md), [`ARCNET-DOMAIN-INCIDENT.md`](ARCNET-DOMAIN-INCIDENT.md)) still name their type folders in the old style (e.g. `thoughts/`, `aporias/`, `hypothesis/`) and the example graph under [`examples/graph/`](examples/graph/) still uses the old layout; both need a follow-up pass.
+>
+> Revision note (0.11 → 0.12): fixes a predicate-registry drift accumulated since 0.5 — several predicates were required by a type or used in a worked example without ever being registered under §10, and five places cited a phantom `§10.7` that never existed (§10 ran 10.1–10.6, then jumped straight to 10.8). Fixed by renumbering the Schema predicates section from §10.8 to §10.7, closing the gap, and repointing every dangling `§10.7` citation to wherever the predicate is actually registered (mostly §10.2, one to §10.6). `Entity`'s required `definition` is retired — it duplicated the generic `text` predicate (§10.2), which `Entity` now requires instead. `authors` (plural, never registered) is corrected to the registered singular `author` everywhere it was used (`Source`, `Reference`). `year` on `Reference` is retired in favor of the existing `published` predicate. `notes` (`Entity`, `Resource`), `ref` and `status` (`Reference`'s worked example), `granularity` (`Timeline`'s worked example), and `relevance` (mentioned only in prose, never actually registered or required) are all retired outright — none were `_schema/Property/` nodes and none are reinstated. The §3 `.nt` example's stray `href` triple is corrected to `tags`: `href` names a rendering role (§5), not a predicate, so it must never appear as a triple's predicate position.
 
 This document specifies the **domain-agnostic core** of a knowledge graph stored as plain Markdown: the RDF-aligned data model (§3), the node model built from it (§5), identity, folder layout, edges, the schema mechanism that makes predicates and types first-class graph nodes (§9), the core predicates and core types (`Source`, `Entity`, `Resource`, `Timeline`, `Reference`), citations, merge, version control, and the patch exchange format. It is **tool-agnostic** — it depends on no program, library, or language.
 
@@ -61,7 +63,7 @@ A [[cryptographic]] protocol that establishes an authenticated, confidential cha
   category "independent" ; category "abstract" ; category "occurrent" ; category "script"
   tags "cryptography"
   text "A cryptographic protocol that establishes an authenticated, confidential channel over an untrusted network."
-  href "cryptographic"
+  tags "cryptographic"
   replaces "SSL Protocol"
   conformsTo "RFC 8446"
   mentionedIn "rescorla-2026-tls13"
@@ -154,7 +156,7 @@ A `Source` node's `@id` is a citekey derived from the document's own metadata:
 <first-author-surname>-<publication-year>-<slug-keyword>
 ```
 
-lowercased, ASCII, hyphen-separated (e.g. `rescorla-2026-tls13`). `surname` is the first author's surname (`anon` if unknown); `year` is the publication year; `slug-keyword` is one or two salient title words. The same document always yields the same citekey. The document's own title is a distinct predicate (`title`, §10.7) — the citekey is not a substitute for it.
+lowercased, ASCII, hyphen-separated (e.g. `rescorla-2026-tls13`). `surname` is the first author's surname (`anon` if unknown); `year` is the publication year; `slug-keyword` is one or two salient title words. The same document always yields the same citekey. The document's own title is a distinct predicate (`title`, §10.2) — the citekey is not a substitute for it.
 
 ### 7.3 Title identity
 
@@ -227,9 +229,9 @@ Type names MUST be **UpperCamelCase** (PascalCase) — e.g. `Source`, `Entity`, 
 - `@type` (mandatory) — the literal `Class`
 
 **Body**
-- `description` (mandatory) — a definition of the type (`description`, §10.8)
-- `## Requires` (mandatory if the type has any type-specific mandatory predicate) — `required:: [[predicate]]` bullets a conforming instance MUST carry (`required`, §10.8)
-- `## Optional` (optional) — `optional:: [[predicate]]` bullets a conforming instance MAY carry (`optional`, §10.8)
+- `description` (mandatory) — a definition of the type (`description`, §10.7)
+- `## Requires` (mandatory if the type has any type-specific mandatory predicate) — `required:: [[predicate]]` bullets a conforming instance MUST carry (`required`, §10.7)
+- `## Optional` (optional) — `optional:: [[predicate]]` bullets a conforming instance MAY carry (`optional`, §10.7)
 
 Every type implicitly requires `@id` and `@type` (§10.1); these are never repeated in a type's own `## Requires` list.
 
@@ -240,11 +242,11 @@ Every type implicitly requires `@id` and `@type` (§10.1); these are never repea
 ---
 # Entity
 
-A node for a subject occurring in sources, typed by Sowa category (`category`, §10.7).
+A node for a subject occurring in sources, typed by Sowa category (`category`, §10.2).
 
 ## Requires
 - required:: [[category]]
-- required:: [[definition]]
+- required:: [[text]]
 - required:: [[mentionedIn]]
 
 ## Optional
@@ -301,7 +303,7 @@ Topical tags for discoverability.
 #### `text`
 **role:** `text` · **aligned:** `schema:text` · **merge:** `append`
 
-Generic prose predicate. Each contribution appends to the existing prose rather than overwriting it, since separate documents may each add relevant text about the same subject over time. A type MAY instead declare its own, more specific text predicate (e.g. `abstract`, `definition`, `relevance`, §10.7) when a precise name aids reading and a single, first-fixed value is wanted instead.
+Generic prose predicate. Each contribution appends to the existing prose rather than overwriting it, since separate documents may each add relevant text about the same subject over time. A type MAY instead declare its own, more specific text predicate (e.g. `abstract`, §10.2) when a precise name aids reading and a single, first-fixed value is wanted instead.
 
 #### `title`
 **role:** `meta` · **aligned:** `schema:title` · **merge:** `immutable`
@@ -502,7 +504,7 @@ The citing statement refutes claims in the target.
 The inverse of any citation predicate — recorded as a backlink under the cited node's own `## isCitedBy` block.
 
 
-### 10.8 Schema predicates
+### 10.7 Schema predicates
 
 Predicates used by exactly `Property`/`Class` nodes (§9.1, §9.2) — the schema mechanism's own vocabulary, registered like any other predicate rather than left as unregistered structure.
 
@@ -567,7 +569,7 @@ A node for one ingested document.
 - required:: [[mentions]]
 
 ## Optional
-- optional:: [[authors]]
+- optional:: [[author]]
 - optional:: [[url]]
 - optional:: [[cites]]
 - optional:: [[tags]]
@@ -581,7 +583,7 @@ A domain profile MAY add navigation blocks linking the document to its own deriv
 "@id": rescorla-2026-tls13
 "@type": Source
 title: "TLS 1.3: Design and Rationale"
-authors: [Eric Rescorla]
+author: [Eric Rescorla]
 published: 2026-04-12
 url: https://example.org/tls13-design
 tags: [tls, protocols]
@@ -600,7 +602,7 @@ A design retrospective on the TLS 1.3 handshake and the residual risk of zero ro
 
 ### 11.3 `Entity`
 
-A node for a subject occurring in sources, typed by Sowa category (`category`, §10.7). **Identity:** `@id` + alias table (§7.3, §7.4).
+A node for a subject occurring in sources, typed by Sowa category (`category`, §10.2). **Identity:** `@id` + alias table (§7.3, §7.4).
 
 ```markdown
 ---
@@ -609,17 +611,16 @@ A node for a subject occurring in sources, typed by Sowa category (`category`, �
 ---
 # Entity
 
-A node for a subject occurring in sources, typed by Sowa category (`category`, §10.7).
+A node for a subject occurring in sources, typed by Sowa category (`category`, §10.2).
 
 ## Requires
 - required:: [[category]]
-- required:: [[definition]]
+- required:: [[text]]
 - required:: [[mentionedIn]]
 
 ## Optional
 - optional:: [[aliases]]
 - optional:: [[tags]]
-- optional:: [[notes]]
 - any §10.5 semantic predicate, as applicable
 ```
 
@@ -659,9 +660,6 @@ A fragment of an ingested document's content that is relevant to the graph but d
 - required:: [[text]]
 - required:: [[tags]]
 - required:: [[mentionedIn]]
-
-## Optional
-- optional:: [[notes]]
 ```
 
 ```markdown
@@ -699,7 +697,6 @@ A production-date index of ingested documents.
 ---
 "@id": 2026-04
 "@type": Timeline
-granularity: monthly
 ---
 # April 2026
 
@@ -726,8 +723,8 @@ A node for an external work the graph points to but has not ingested, or a topic
 
 ## Optional
 - optional:: [[url]]
-- optional:: [[authors]]
-- optional:: [[year]]
+- optional:: [[author]]
+- optional:: [[published]]
 - optional:: [[doi]]
 - optional:: [[isCitedBy]]
 ```
@@ -737,11 +734,9 @@ A node for an external work the graph points to but has not ingested, or a topic
 "@id": The Transport Layer Security (TLS) Protocol Version 1.3
 "@type": Reference
 title: "The Transport Layer Security (TLS) Protocol Version 1.3"
-ref: standard
-authors: [Eric Rescorla]
-year: 2018
+author: [Eric Rescorla]
+published: 2018
 url: https://www.rfc-editor.org/rfc/rfc8446
-status: read
 ---
 # The Transport Layer Security (TLS) Protocol Version 1.3
 
@@ -821,7 +816,7 @@ All graph nodes are grouped by type under an H1, each node its own H2 subsection
 **Under each H2:** a fenced ` ```yaml ` block with the node's remaining predicates with role `meta` (i.e. every `meta`-role predicate other than `@id`/`@type`, which the H1/H2 already supply — including any predicate also mirrored in the manifest); then the node body:
 
 - The node's `text`-role predicate renders as a plain paragraph, unlabeled — a paragraph with no bold label prefix is always the `text`-role predicate (§5).
-- Every `link`-role predicate in use renders as its own block: a bold label (the predicate's `label`, §10.8, or its name capitalized) followed by its `predicate:: [[Target]]` bullets — the bold-label equivalent of the graph's `## Predicate` block (§5), since headings are reserved for type and identity here.
+- Every `link`-role predicate in use renders as its own block: a bold label (the predicate's `label`, §10.7, or its name capitalized) followed by its `predicate:: [[Target]]` bullets — the bold-label equivalent of the graph's `## Predicate` block (§5), since headings are reserved for type and identity here.
 - `edge`-role predicates render as `predicate:: [[Target]]` bullets, one heterogeneous block per node; a bold label MAY be added where it aids reading (§5), but is not required per bullet.
 
 Markdown headings are reserved for type and identity; node bodies use bold labels, never headings.
@@ -872,7 +867,7 @@ A profile MUST NOT redefine CORE mechanism (identity, edges, citations, the sche
 - [ ] Every file is one node with valid YAML front-matter and mandatory `@id`/`@type` (§10.1).
 - [ ] Every basename equals its node's `@id`, is unique and human-readable; every `[[link]]` resolves to a basename (§7).
 - [ ] Every `Source`'s `@id` is a citekey equal to its basename (§7.2).
-- [ ] Every `Entity` has a four-word decoded Sowa `category` (§10.7).
+- [ ] Every `Entity` has a four-word decoded Sowa `category` (§10.2).
 - [ ] Every derived node links to its source(s) (§4.6).
 - [ ] Every predicate is camelCase and registered as a `_schema/Property/` node (§8.3, §9.1).
 - [ ] Every `@type` in use is UpperCamelCase and registered as a `_schema/Class/` node declaring its Requires/Optional predicates (§9.2).
