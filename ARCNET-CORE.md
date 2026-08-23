@@ -1,6 +1,6 @@
 # CORE — Markdown Knowledge Graph
 
-**Status:** Draft · **Version:** 0.10 · **Date:** 2026-08-21
+**Status:** Draft · **Version:** 0.11 · **Date:** 2026-08-23
 
 > Revision note (0.4 → 0.5): this revision makes predicates and types **first-class, schema nodes** rather than prose vocabulary (§9), reframes the node model explicitly in RDF terms (§3, §5), and renames the identity/classification front-matter fields to the JSON-LD `@id`/ `@type` pair (§10.1) — replacing the old `kind`/`id`/`title` fields. Merge is now declared **per predicate** (§9.3), not per node kind; the old kind-level merge table is retired. This is a **breaking change**: [`ARCNET-AST.md`](ARCNET-AST.md), [`SPEC.md`](SPEC.md), [`ARCNET-DOMAIN-ARTICLE.md`](ARCNET-DOMAIN-ARTICLE.md), [`ARCNET-DOMAIN-CORE-THOUGHT.md`](ARCNET-DOMAIN-CORE-THOUGHT.md), and the example graphs under `examples/` still used the pre-0.5 `kind`/`id`/`title` fields and the kind-level merge table at the time this note was written. **Update:** `ARCNET-AST.md`, `ARCNET-DOMAIN-ARTICLE.md`, and `ARCNET-DOMAIN-CORE-THOUGHT.md` have since been brought current (see their own revision notes); `SPEC.md` and the example graphs under `examples/` still need a follow-up pass.
 >
@@ -13,6 +13,8 @@
 > Revision note (0.8 → 0.9): documents a naming-convention decision made previously but never written into CORE and never applied to CORE's own types: **type (class) names MUST be UpperCamelCase (PascalCase)**, distinct from predicate names, which MUST be camelCase (§8.3). The rule is now stated in §9.2. CORE's own five types are renamed accordingly: `source` → `Source`, `entity` → `Entity`, `resource` → `Resource`, `timeline` → `Timeline`, `reference` → `Reference`. Folder names (§6, e.g. `sources/`) and `@id`/citekey values are unaffected — only the `@type`/type-node `@id` string changes case. This is a **breaking change**: [`ARCNET-DOMAIN-ARTICLE.md`](ARCNET-DOMAIN-ARTICLE.md) and the example graph under [`examples/graph/`](examples/graph/) still wrote lowercase `@type` values for CORE's types at the time this note was written and need a follow-up pass.
 >
 > Revision note (0.9 → 0.10): fixes a role mix-up between `Resource` and `Reference` introduced in 0.8. `Resource` (§11.4) was wrongly defined as "an external work the graph points to but has not ingested" — that is `Reference`'s role, not `Resource`'s. `Resource` is redefined as its long-standing implementation meaning: an anonymous fragment of *ingested* content that doesn't warrant its own dedicated type, classified by `tags` so a recurring pattern can later be promoted into a proper domain type (§15) — e.g. a core thought, modeled as a tagged `Resource` before a domain profile defines its own `Thought` type. `Resource`'s Requires/Optional change from `ref`/`relevance`/`url`/`authors`/`year`/`doi`/`status`/`isCitedBy`/`notes` to `text`/`tags`/`mentionedIn` (Requires) and `notes` (Optional); those displaced predicates move to `Reference`, which now correctly owns the full "external, not-yet-ingested work" behavior (required `title`/`ref`/`relevance`; optional `url`/`authors`/`year`/`doi`/`status`/`isCitedBy`/`notes`). `mentionedIn` (§10.4) is generalized from an `Entity`-only backlink to a `Resource` one too; `cites`/`isCitedBy` (§10.6) now target `Reference` rather than `Resource`. This is a **breaking change**, on top of the still-open follow-up from 0.9: any graph, domain profile, or the example graph under [`examples/graph/`](examples/graph/) using `Resource` for external, un-ingested works must move that content to `Reference`.
+>
+> Revision note (0.10 → 0.11): tightens §6 into a machine-checkable rule. Folder names were plural, lowercase, and sometimes unrelated to the type they held (`sources/` for `Source`, `_schema/types/` for `Class`), forcing every consumer to carry its own pluralization/case-folding table to get from a folder to a `@type` value. A type folder's name MUST now be **character-for-character identical to the type name** (§6), so folder ↔ type is string equality. CORE's folders are renamed accordingly: `sources/` → `Source/`, `entities/` → `Entity/`, `resources/` → `Resource/`, `references/` → `Reference/`, `_schema/predicates/` → `_schema/Property/`, `_schema/types/` → `_schema/Class/`. `_schema/` (a namespace prefix) and `timeline/` (a bucketed index, §11.5) are the two exempt non-type folders. Nothing about `@id`, `@type`, predicates, or merge behavior changes — only where nodes are filed — and because links resolve by basename (§4.2), no edge breaks. It is still a **breaking change** for any tool that hardcodes folder paths, and a re-filing pass for existing graphs. Domain profiles ([`ARCNET-DOMAIN-ARTICLE.md`](ARCNET-DOMAIN-ARTICLE.md), [`ARCNET-DOMAIN-CORE-THOUGHT.md`](ARCNET-DOMAIN-CORE-THOUGHT.md), [`ARCNET-DOMAIN-INCIDENT.md`](ARCNET-DOMAIN-INCIDENT.md)) still name their type folders in the old style (e.g. `thoughts/`, `aporias/`, `hypothesis/`) and the example graph under [`examples/graph/`](examples/graph/) still uses the old layout; both need a follow-up pass.
 
 This document specifies the **domain-agnostic core** of a knowledge graph stored as plain Markdown: the RDF-aligned data model (§3), the node model built from it (§5), identity, folder layout, edges, the schema mechanism that makes predicates and types first-class graph nodes (§9), the core predicates and core types (`Source`, `Entity`, `Resource`, `Timeline`, `Reference`), citations, merge, version control, and the patch exchange format. It is **tool-agnostic** — it depends on no program, library, or language.
 
@@ -77,8 +79,8 @@ A conforming graph MUST uphold these invariants:
 1. **One node, one file.** Each node is a single `.md` file with a YAML front-matter header and a Markdown body.
 2. **Identity is the `@id`.** A node's identity is its mandatory `@id` predicate, equal to the file's basename (without `.md`), unique across the whole graph (§7). Links resolve by basename, independent of folder; a node MAY be moved between folders without affecting any edge.
 3. **Edges are wiki-links.** An edge is `[[Target]]`, where `Target` is another node's basename. An edge MAY be typed by a predicate (§8).
-4. **Predicates are first class.** Every predicate used anywhere in the graph — front-matter field, body edge, or citation type — is itself a node under `_schema/predicates/` (§9.1), declaring that predicate's serialization role (§5) and merge behavior (§9.3) once, for every type that uses it.
-5. **Types are first class.** Every `@type` value in use is itself a node under `_schema/types/` (§9.2), declaring which predicates it requires or permits (§11). CORE's own types (`Source`, `Entity`, `Resource`, `Timeline`, `Reference`) are ordinary instances of this mechanism, not special-cased.
+4. **Predicates are first class.** Every predicate used anywhere in the graph — front-matter field, body edge, or citation type — is itself a node under `_schema/Property/` (§9.1), declaring that predicate's serialization role (§5) and merge behavior (§9.3) once, for every type that uses it.
+5. **Types are first class.** Every `@type` value in use is itself a node under `_schema/Class/` (§9.2), declaring which predicates it requires or permits (§11). CORE's own types (`Source`, `Entity`, `Resource`, `Timeline`, `Reference`) are ordinary instances of this mechanism, not special-cased.
 6. **Derived nodes carry provenance.** A node distilled from a document MUST link to the document node(s) it was derived from.
 7. **Classification is data, not location.** A node's `@type` and any other classification lives in predicates; folders MAY mirror it but MUST NOT be its sole carrier.
 8. **Append-only growth, defined merges.** Adding content creates new files or merges into existing ones per each predicate's declared merge behavior (§9.3). Merges are commutative and idempotent at the predicate level, so replay, reordering, and rollback are well-defined.
@@ -109,25 +111,32 @@ A node's **type** is named by its `@type` predicate and defined by CORE (§11) o
 
 ## 6. Folder Structure
 
-Each type has one folder, named after the type; nodes are filed flat within it. Folders are a filing convenience: because links resolve by basename (§4.2), a node may be re-filed without breaking edges, and its classification lives in predicates (§4.7), not in the folder.
+Each type has exactly one folder and each folder holds exactly one type. A type's folder name MUST be **character-for-character identical to the type name** (§9.2) same case, no pluralization, no abbreviation, no synonym (e.g. `Source`). Domain extensions are allowed to create a functional folder that contains heterogenous class combinations. 
+
+Two functional folders are exempt, because neither is a type folder:
+
+- **`_schema/`** — a namespace prefix, not a type. Its children are type folders and MUST follow the rule: `Property/` for predicate nodes (§9.1), `Class/` for type nodes (§9.2).
+- **`timeline/`** — an index whose `Timeline` nodes (§11.5) are bucketed by granularity into `yearly/` and `monthly/` subfolders rather than filed flat. It is the one type whose nodes do not sit directly in a type folder, so the flat-folder rule does not apply.
+
+Folders remain a filing convenience: because links resolve by basename (§4.2), a node may be re-filed without breaking edges, and its classification lives in predicates (§4.7), not in the folder. A consumer MUST read `@type` from the node, never infer it from the folder — the naming rule makes the folder a reliable *mirror* of the type, not a substitute for it (§4.7).
 
 ```
 graph/
-├── sources/              # source nodes (one per ingested document)
-├── entities/             # entity nodes (Sowa-typed)
-├── resources/            # resource nodes (anonymous ingested content)
-├── references/           # reference nodes (external, not-yet-ingested works)
-├── timeline/             # production-date index
+├── Source/               # Source nodes (one per ingested document)
+├── Entity/               # Entity nodes (Sowa-typed)
+├── Resource/             # Resource nodes (anonymous ingested content)
+├── Reference/            # Reference nodes (external, not-yet-ingested works)
+├── timeline/             # production-date index — Timeline nodes, bucketed
 │   ├── yearly/           #   <YYYY>.md
 │   └── monthly/          #   <YYYY-MM>.md
 ├── _schema/              # schema nodes + controlled vocabularies
-│   ├── predicates/       #   one node per predicate (§9.1)
-│   ├── types/            #   one node per type/class (§9.2)
+│   ├── Property/         #   one Property node per predicate (§9.1)
+│   ├── Class/            #   one Class node per type (§9.2)
 │   └── aliases.md        #   entity alias table (§7.4) — not a node
-└── …                     # domain-profile type folders
+└── …                     # domain-profile type folders, likewise type-named
 ```
 
-`_schema/predicates/` and `_schema/types/` hold real nodes — `Property` and `Class` instances, governed by the same rules as any other node (§4.1–§4.2) — describing the graph's own vocabulary rather than its content. `_schema/aliases.md` remains a plain aggregate file, not a node, exactly as `_meta/aliases.md` did before this revision (§6 old numbering).
+`_schema/Property/` and `_schema/Class/` hold real nodes — `Property` and `Class` instances, governed by the same rules as any other node (§4.1–§4.2) — describing the graph's own vocabulary rather than its content. `_schema/aliases.md` is a plain aggregate file, not a node, and so carries no type folder.
 
 ## 7. Identity and Naming
 
@@ -173,7 +182,7 @@ The `::` token separates predicate from target.
 
 ### 8.3 Predicate naming and registration
 
-Predicate names MUST be **camelCase**. Every predicate in use MUST be registered as a node under `_schema/predicates/` (§9.1), aligned to a standard vocabulary term where one exists; otherwise it is graph-native (`arc:`). Producers MUST reuse a registered predicate before introducing a new one. Type (class) names follow the complementary rule, **UpperCamelCase** (§9.2).
+Predicate names MUST be **camelCase**. Every predicate in use MUST be registered as a node under `_schema/Property/` (§9.1), aligned to a standard vocabulary term where one exists; otherwise it is graph-native (`arc:`). Producers MUST reuse a registered predicate before introducing a new one. Type (class) names follow the complementary rule, **UpperCamelCase** (§9.2).
 
 ## 9. Schema
 
@@ -181,7 +190,7 @@ Predicates and types are ordinary graph nodes: the mechanism CORE and every prof
 
 ### 9.1 Predicate nodes
 
-Every predicate in use — front-matter field, body edge, citation type — MUST be registered as a node at `_schema/predicates/<name>.md`.
+Every predicate in use — front-matter field, body edge, citation type — MUST be registered as a node at `_schema/Property/<name>.md`.
 
 **Front-matter**
 - `@id` (mandatory) — the predicate's camelCase name, equal to the basename
@@ -209,9 +218,9 @@ Asserts that the subject is a component or member of the whole named by the targ
 
 ### 9.2 Type nodes
 
-Every `@type` value in use MUST be registered as a node at `_schema/types/<name>.md`, declaring the predicates it requires and permits.
+Every `@type` value in use MUST be registered as a node at `_schema/Class/<name>.md`, declaring the predicates it requires and permits.
 
-Type names MUST be **UpperCamelCase** (PascalCase) — e.g. `Source`, `Entity`, `Reference` — the mirror image of the camelCase rule for predicate names (§8.3): predicates start lowercase, types start uppercase, so the two vocabularies are visually distinguishable wherever they appear, including bare in prose.
+Type names MUST be **UpperCamelCase** (PascalCase) — e.g. `Source`, `Entity`, `Reference` — the mirror image of the camelCase rule for predicate names (§8.3): predicates start lowercase, types start uppercase, so the two vocabularies are visually distinguishable wherever they appear, including bare in prose. The name chosen here is also the type's folder name verbatim (§6), so it is fixed in three places at once — the `@type` value, the schema node's basename, and the folder.
 
 **Front-matter**
 - `@id` (mandatory) — the type's PascalCase name, equal to the basename
@@ -260,7 +269,7 @@ A domain profile MUST declare each of its own predicates' merge behavior from th
 
 ## 10. Core Predicates
 
-The predicates below are CORE's own `_schema/predicates/` nodes — every core type (§11) is built from this vocabulary. A domain profile MAY adds the predicates its own types require (§14), following the same node format (§9.1).
+The predicates below are CORE's own `_schema/Property/` nodes — every core type (§11) is built from this vocabulary. A domain profile MAY adds the predicates its own types require (§14), following the same node format (§9.1).
 
 ### 10.1 Identity (JSON-LD core)
 
@@ -759,7 +768,7 @@ Ingesting a document is exactly one commit containing its entire contribution: t
 - **Ingest** — `git add -A` then `git commit -F <msg>` (§13.3)
 - **Locate commit** — `git log --grep=<id>`
 - **Node history** — `git log --follow -- '<path-to-node>'`
-- **Idempotency** — before ingesting, check `git ls-files --error-unmatch sources/<id>.md` — skip if present
+- **Idempotency** — before ingesting, check `git ls-files --error-unmatch Source/<id>.md` — skip if present
 
 The **retract** via `git revert <commit>` is only applicable to the latest commit. The retraction of the Source in the middle of change history requires analysis of node changes and it is allowed only if YAML metadata has not been created by this Source. If node has been merged from multiple sources git revert can remove YAML forntmatter that cause corruption of the node. 
 
@@ -850,9 +859,9 @@ A patch is **idempotent**: applying it twice yields the same graph (step 3's uni
 
 A conforming domain profile (`DOMAIN-<name>.md`) MUST define:
 
-1. **Types** — which CORE types (§11) it adopts, and each domain-specific type's folder, schema node (§9.2, with an inline example), identity (§7), and the merge behavior of its own predicates (§9.3).
+1. **Types** — which CORE types (§11) it adopts, and each domain-specific type's folder (named identically to the type, §6), schema node (§9.2, with an inline example), identity (§7), and the merge behavior of its own predicates (§9.3).
 2. **Class vocabularies** — any class values its types carry.
-3. **Predicates** — the registered, camelCase, standards-aligned predicates its types use (§8.3), each as its own `_schema/predicates/` node (§9.1), beyond the core vocabulary (§10).
+3. **Predicates** — the registered, camelCase, standards-aligned predicates its types use (§8.3), each as its own `_schema/Property/` node (§9.1), beyond the core vocabulary (§10).
 4. **Provenance model** — which types are derived and what they link back to (§4.6).
 5. **A worked example** demonstrating every type, predicate, and the folder layout.
 
@@ -865,8 +874,9 @@ A profile MUST NOT redefine CORE mechanism (identity, edges, citations, the sche
 - [ ] Every `Source`'s `@id` is a citekey equal to its basename (§7.2).
 - [ ] Every `Entity` has a four-word decoded Sowa `category` (§10.7).
 - [ ] Every derived node links to its source(s) (§4.6).
-- [ ] Every predicate is camelCase and registered as a `_schema/predicates/` node (§8.3, §9.1).
-- [ ] Every `@type` in use is UpperCamelCase and registered as a `_schema/types/` node declaring its Requires/Optional predicates (§9.2).
+- [ ] Every predicate is camelCase and registered as a `_schema/Property/` node (§8.3, §9.1).
+- [ ] Every `@type` in use is UpperCamelCase and registered as a `_schema/Class/` node declaring its Requires/Optional predicates (§9.2).
+- [ ] Every type folder's name is character-for-character identical to its type name (§6).
 - [ ] Every citation uses a registered citation-type predicate in the body (§12).
 - [ ] Each predicate's merge behavior is one of the §9.3 menu and is commutative/idempotent.
 - [ ] Each document was ingested as exactly one git commit (§13).
