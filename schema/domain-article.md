@@ -1,8 +1,8 @@
 ---
-kind: patch
+"@type": patch
 document: ARCNET-DOMAIN-ARTICLE.md
-published: 2026-07-07
-stats: { nodes: 20, edges: 20 }
+published: 2026-08-27
+stats: { nodes: 21, edges: 20 }
 ---
 
 # Property
@@ -136,16 +136,16 @@ Literal statements decomposing the open problem, one per bullet. Displayed under
 
 ```yaml
 role: meta
-merge: validatedOverwrite
+merge: lastWriteWin
 ```
 
-The node's validation class — enum values differ per type. Produced only by an optional validation pass; an unvalidated `hypothesis`/`aporia` simply has none, a valid state.
+The node's validation class — enum values differ per type. Produced only by an optional validation pass; an unvalidated `Hypothesis`/`Aporia` simply has none, a valid state. Each validation-pass run replaces the prior value.
 
 ## confidence
 
 ```yaml
 role: meta
-merge: validatedOverwrite
+merge: lastWriteWin
 ```
 
 A 0–1 numeric confidence score assigned by the validation pass.
@@ -188,7 +188,6 @@ A conclusion distilled from sources.
 - optional:: [[assumptions]]
 - optional:: [[assumes]]
 - optional:: [[addresses]]
-- optional:: [[notes]]
 - optional:: [[class]]
 - optional:: [[confidence]]
 - any CORE §10.6 citation predicate, as applicable
@@ -210,7 +209,6 @@ An open problem or unresolved tension.
 - optional:: [[concerns]]
 - optional:: [[addressedBy]]
 - optional:: [[solvedBy]]
-- optional:: [[notes]]
 - optional:: [[class]]
 
 ## Source

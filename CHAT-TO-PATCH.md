@@ -4,7 +4,7 @@ Your ENTIRE output MUST be one Markdown document conforming EXACTLY to the patch
 
 # PHASE 1 — CORE PROCESSING (run first, complete it before Phase 2)
 
-Read the whole session and derive these node kinds:
+Read the whole session and derive these node types:
 
 1. SOURCE — exactly one node representing the session itself. Its identity is a citekey:
 
@@ -13,11 +13,11 @@ Read the whole session and derive these node kinds:
    lowercased, ASCII, hyphen-separated: name of the month, the session's year, and two or three salient words naming the session's topic. Example: `2026-july-patch-memory`. The same session must always yield the same citekey.
 
    The source node carries:
-   - scalar fields: `title` (a concise session title), `published` (the session created date, ISO-8601), `authors` (the lastname of current account or other participants, if known), `tags` (topical tags)
+   - scalar fields: `title` (a concise session title), `published` (the session created date, ISO-8601), `author` (the lastname of current account or other participants, if known), `tags` (topical tags)
    - body: a short prose abstract (2–4 sentences) stating what the session was about and what it concluded — written as knowledge, not as a play-by-play
    - literals: plain bullets capturing the session's atomic factual statements, decisions taken, and constraints discovered — each one a standalone sentence. These literals are the raw material Phase 2 reads.
    - **Mentions** — one `mentions:: [[Entity]]` edge per entity you derive
-   - **Cites** — one `cites:: [[Resource]]` edge per resource you derive
+   - **Cites** — one `cites:: [[Reference]]` edge per reference you derive
    - **Thoughts** — one `generatedThought:: [[Thought]]` edge per thought you derive in Phase 2 (fill this in after Phase 2; both directions MUST be consistent)
 
 2. ENTITY — one node per durable SUBJECT the session worked on: a concept, system, protocol, format, technique, artifact. Include only subjects with independent identity and reuse value across sessions; skip incidental mentions.
@@ -27,7 +27,7 @@ Read the whole session and derive these node kinds:
    Each entity carries:
    - scalar fields: `category` (mandatory — see Sowa table below), `aliases` (if any)
    - body: a 1–3 sentence definition of the subject (what it IS, not what the session said about it)
-   - semantic edges relating it to other entities/resources, choosing the MOST SPECIFIC predicate that holds, asked in this order:
+   - semantic edges relating it to other entities/references, choosing the MOST SPECIFIC predicate that holds, asked in this order:
        broader::      is a kind of / specialization of (concept hierarchy)
        isPartOf::     is a component or member of (composition)
        requires::     needs to function, hold, or be delivered (dependency)
@@ -55,10 +55,10 @@ Read the whole session and derive these node kinds:
      [mediating, abstract, continuant, reason]
      [mediating, abstract, occurrent, purpose]
 
-3. RESOURCE — one node per EXTERNAL WORK the session pointed to but did not ingest: a paper, standard, tool, dataset, post, library, documentation page, or a topic flagged for later research. Identity is the title (the work's name).
+3. REFERENCE — one node per EXTERNAL WORK the session pointed to but did not ingest: a paper, standard, tool, dataset, post, library, documentation page, or a topic flagged for later research. Identity is the title (the work's name).
 
-   Each resource carries:
-   - scalar fields: `ref` (mandatory — one of: paper | standard | tool | dataset | post | technique | theory | platform | system | technology | language | framework | field), `url` / `authors` / `year` / `doi` when known, `status` (`read` or `backlog` — use `backlog` for things the session deferred for later study)
+   Each reference carries:
+   - scalar fields: `title` (mandatory, equal to the identity), `url` / `author` / `published` / `doi` when known
    - body: a 1–2 sentence relevance note (why it matters to this work)
    - **isCitedBy** — `isCitedBy:: [[<session-citekey>]]` back to the source
 
@@ -71,8 +71,7 @@ A Core Thought is the minimal GENERATIVE COGNITIVE UNIT: the central insight, hy
 Each thought carries:
 - identity: a concise title, ≤ 6 words, phrased so the same thought always yields the same title
 - scalar fields:
-    source    (mandatory) — [[<session-citekey>]]
-    class     (mandatory) — exactly one of:
+    cognition (mandatory) — exactly one of:
                 insight | hypothesis | principle | question | direction | decision
     maturity  (recommended) — exactly one of:
                 emerging   (early intuition, weakly supported)
@@ -80,31 +79,32 @@ Each thought carries:
                 mature     (well-developed line of reasoning)
 - body, in this order:
     claim          (mandatory) — ONE sentence, the central statement, rendered in *emphasis* as the first body line
+    - derivedFrom:: [[<session-citekey>]] (mandatory) — provenance edge back to the source
     **About**      (recommended) — 2–4 sentences: why the thought matters, what problem it addresses
     **Motivation** (recommended) — the underlying problem or curiosity that motivated the session
     **Concerns**   (recommended) — `concerns:: [[Entity]]` edges to the entities the thought is about (only entities emitted in Phase 1)
-    **Evidence**   (optional) — citation edges to resources the thought draws on, using the most specific citation type that holds: citesAsEvidence:: | citesAsAuthority:: | supports:: | confirms:: | extends:: | critiques:: | disputes:: | refutes:: (targets must be resources emitted in Phase 1)
+    **Evidence**   (optional) — citation edges to references the thought draws on, using the most specific citation type that holds: citesAsEvidence:: | citesAsAuthority:: | supports:: | confirms:: | extends:: | critiques:: | disputes:: | refutes:: (targets must be references emitted in Phase 1)
     **Next**       (optional) — the natural next question, experiment, or line of reasoning the thought implies (valuable for resuming work in a future session)
 
-A thought may link ONLY to source, entity, and resource nodes — never to any other kind. After Phase 2, go back and record one `generatedThought:: [[Thought Title]]` edge in the source node's **Thoughts** block for every thought — the two directions must match 1:1.
+A thought may link ONLY to source, entity, and reference nodes — never to any other kind. After Phase 2, go back and record one `generatedThought:: [[Thought Title]]` edge in the source node's **Thoughts** block for every thought — the two directions must match 1:1.
 
 # OUTPUT FORMAT — THE PATCH DOCUMENT (follow byte-for-byte conventions)
 
 - The document has EXACTLY ONE real YAML front-matter block — the manifest. The YAML front matter MUST begin with a line containing exactly three hyphen characters (---) and MUST end with a line containing exactly three hyphen characters (---).
 
       ---
-      kind: patch
+      "@type": patch
       document: <session-citekey>
       published: <session-date ISO-8601>
       title: "<session title>"
-      stats: { sources: 1, entities: <n>, resources: <n>, thoughts: <n>, edges: <n> }
+      stats: { sources: 1, entities: <n>, references: <n>, thoughts: <n>, edges: <n> }
       ---
 
-  `kind: patch`, `document`, and `published` are mandatory; `title` and `stats` are recommended.
+  `"@type": patch`, `document`, and `published` are mandatory; `title` and `stats` are recommended.
 
-- The body groups FULL nodes (never deltas) by kind:
-  - H1 = node kind: `# Source`, `# Entity`, `# Resource`, `# Thought` — one H1 per kind present, in that order; omit a kind with no nodes.
-  - H2 = node identity: `## <basename>` — one H2 per node (the citekey for the source, the title for entities, resources, and thoughts).
+- The body groups FULL nodes (never deltas) by type:
+  - H1 = node type: `# Source`, `# Entity`, `# Reference`, `# Thought` — one H1 per type present, in that order; omit a kind with no nodes.
+  - H2 = node identity: `## <basename>` — one H2 per node (the citekey for the source, the title for entities, references, and thoughts).
   - Under each H2, first a fenced ```yaml block with the node's REMAINING scalar fields.
   - Then the node body: prose, literals, and `predicate:: [[Target]]` edges with canonical basename targets.
 - H1 and H2 are the ONLY Markdown headings in the document. Inside node bodies use **bold labels** (e.g. **Mentions**, **Concerns**), NEVER headings.
@@ -117,11 +117,11 @@ WHAT TO EXCLUDE: conversational mechanics (greetings, tool runs, false starts, r
 # SKELETON (shape reference — replace all content)
 
 ---
-kind: patch
+"@type": patch
 document: july-2026-patch-memory
 published: 2026-07-05
 title: "Designing Session Memory as ARCNET Patches"
-stats: { sources: 1, entities: 2, resources: 1, thoughts: 2, edges: 11 }
+stats: { sources: 1, entities: 2, references: 1, thoughts: 2, edges: 11 }
 ---
 
 # Source
@@ -130,7 +130,7 @@ stats: { sources: 1, entities: 2, resources: 1, thoughts: 2, edges: 11 }
 
 ```yaml
 title: "Designing Session Memory as ARCNET Patches"
-authors: [Dmitry Kolesnikov]
+author: [Dmitry Kolesnikov]
 published: 2026-07-05
 tags: [knowledge-graph, memory]
 ```
@@ -161,7 +161,7 @@ category: [independent, abstract, continuant, schema]
 aliases: [Patch]
 ```
 
-A single Markdown file serializing one document's full contribution to a knowledge graph, applied via per-kind merge operations.
+A single Markdown file serializing one document's full contribution to a knowledge graph, applied via per-type merge operations.
 
 - isPartOf:: [[ARCNET Core]]
 
@@ -181,14 +181,13 @@ The minimal generative cognitive unit distilled from a body of notes: the insigh
 **mentionedIn**
 - mentionedIn:: [[july-2026-patch-memory]]
 
-# Resource
+# Reference
 
 ## PROV Ontology
 
 ```yaml
-ref: standard
+title: "PROV Ontology"
 url: https://www.w3.org/TR/prov-o/
-status: read
 ```
 
 Supplies `derivedFrom`, the provenance predicate linking thoughts back to the session source.
@@ -201,12 +200,13 @@ Supplies `derivedFrom`, the provenance predicate linking thoughts back to the se
 ## Sessions Are Ingestable Documents
 
 ```yaml
-source: [[july-2026-patch-memory]]
-class: principle
+cognition: principle
 maturity: developing
 ```
 
 *A working session is an ingestable document: give it a citekey, distill it like a paper, and the graph becomes cross-session memory.*
+
+- derivedFrom:: [[july-2026-patch-memory]]
 
 **About**
 Treating sessions as sources reuses the entire CORE pipeline — identity, merge, patch, provenance — with no new mechanism. Memory recall then reduces to graph traversal from entities and thoughts back to the sessions that produced them.
@@ -226,12 +226,13 @@ Define how a future session queries the graph at startup to load relevant though
 ## Thoughts Carry Resumption State
 
 ```yaml
-source: [[july-2026-patch-memory]]
-class: insight
+cognition: insight
 maturity: emerging
 ```
 
 *The **Next** block of a thought, not the source abstract, is where a future session picks up the work.*
+
+- derivedFrom:: [[july-2026-patch-memory]]
 
 **About**
 An abstract records what happened; a thought's open question records what remains. Seeding the next session from **Next** blocks turns the graph from an archive into an agenda.
@@ -242,14 +243,14 @@ An abstract records what happened; a thought's open question records what remain
 # SELF-CHECK before emitting (fix violations, do not report them)
 
 - [ ] Exactly one front-matter block, with kind: patch, document, published.
-- [ ] One H1 per kind present; every node under the right H1; no other headings anywhere.
-- [ ] This patch allow only one of `Source`, `Entity`, `Resource`, `Thought` H1
-- [ ] No `kind` in any yaml block; no `title`/`id` repeated under an H2.
+- [ ] One H1 per type present; every node under the right H1; no other headings anywhere.
+- [ ] This patch allow only one of `Source`, `Entity`, `Reference`, `Thought` H1
+- [ ] No `"@type"` in any yaml block; no `title`/`id` repeated under an H2.
 - [ ] Source citekey is lowercase-ascii-hyphenated and equals the manifest `document`.
 - [ ] Every entity has a valid four-word Sowa category bag from the table.
-- [ ] Every resource has a valid `ref` value.
-- [ ] Every thought: title ≤ 6 words; `source` set; `class` one of the six values; maturity (if present) one of the three values; claim is one emphasized sentence.
-- [ ] Thoughts link only to source/entity/resource nodes.
+- [ ] Every reference has a `title`.
+- [ ] Every thought: title ≤ 6 words; `derivedFrom` set; `cognition` one of the six values; maturity (if present) one of the three values; claim is one emphasized sentence.
+- [ ] Thoughts link only to source/entity/reference nodes.
 - [ ] **Thoughts** block on the source matches the thought set 1:1 (generatedThought ↔ source).
 - [ ] Every mentions:: has its mentionedIn::; every cites:: has its isCitedBy::.
 - [ ] Every [[link]] resolves to an H2 in this patch (or an explicitly referenced known node).

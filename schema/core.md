@@ -2,8 +2,8 @@
 "@type": patch
 document: ARCNET-CORE.md
 title: "CORE Schema Bootstrap"
-published: 2026-07-07
-stats: { nodes: 53, edges: 27 }
+published: 2026-08-23
+stats: { nodes: 48, edges: 24 }
 ---
 
 # Property
@@ -25,7 +25,7 @@ merge: append
 aligned: "schema:text"
 ```
 
-Generic prose predicate. Each contribution appends to the existing prose rather than overwriting it, since separate documents may each add relevant text about the same subject over time. A type MAY instead declare its own, more specific text predicate (e.g. `abstract`, `definition`, `relevance`, §10.7) when a precise name aids reading and a single, first-fixed value is wanted instead.
+Generic prose predicate. Each contribution appends to the existing prose rather than overwriting it, since separate documents may each add relevant text about the same subject over time. A type MAY instead declare its own, more specific text predicate (e.g. `abstract`, §10.2) when a precise name aids reading and a single, first-fixed value is wanted instead.
 
 ## published
 
@@ -60,6 +60,7 @@ ISO-8601 timestamp of the node's last modification.
 role: link
 merge: union
 aligned: "schema:mentions"
+label: Mentions
 ```
 
 Asserts that the source document mentions the entity; recorded under the source's own `## Mentions` block.
@@ -70,9 +71,10 @@ Asserts that the source document mentions the entity; recorded under the source'
 role: link
 merge: union
 aligned: "schema:subjectOf"
+label: Mentioned In
 ```
 
-The inverse of `mentions` — recorded as a backlink under the entity's own `## mentionedIn` block.
+The inverse of `mentions` when carried by an `Entity`; more generally, any derived node's backlink to the source it was drawn from (`Resource` uses it this way too) — recorded under the node's own `## Mentioned In` block.
 
 ## broader
 
@@ -152,7 +154,7 @@ merge: union
 aligned: "dcterms:conformsTo"
 ```
 
-**Standard adherence.** `X conformsTo:: [[Y]]` asserts X complies with a named specification or schema Y (typically a resource). *e.g.* `Transport Layer Security` → `conformsTo:: [[RFC 8446]]`.
+**Standard adherence.** `X conformsTo:: [[Y]]` asserts X complies with a named specification or schema Y (typically a reference). *e.g.* `Transport Layer Security` → `conformsTo:: [[RFC 8446]]`.
 
 ## related
 
@@ -164,6 +166,15 @@ aligned: "skos:related"
 
 **Associative link.** A non-hierarchical, non-compositional association between two connected subjects where none of the above applies. Last resort; prefer a specific predicate whenever one fits.
 
+## referencedBy
+
+```yaml
+role: edge
+merge: union
+```
+
+**Associative link.** A non-hierarchical, non-compositional asymmetric association when the object's own node doesn't explicitly link the subject back.
+
 ## cites
 
 ```yaml
@@ -172,7 +183,7 @@ merge: union
 aligned: "cito:cites / schema:citation"
 ```
 
-The general-purpose citation type; also the source's own structural link to a cited resource, recorded under its `## Cites` block.
+The general-purpose citation type; also the source's own structural link to a cited reference, recorded under its `## Cites` block.
 
 ## citesAsEvidence
 
@@ -269,33 +280,37 @@ The inverse of any citation predicate — recorded as a backlink under the cited
 ```yaml
 role: meta
 merge: immutable
+aligned: "schema:title"
 ```
 
-The document title as published — distinct from `@id` when `@id` is a derived citekey (§7.2).
+The title of document or creative work as originally published (e.g. full article title for `Source` or `Reference`).
 
 ## abstract
 
 ```yaml
 role: text
 merge: firstWriteWin
+aligned: "schema:abstract"
 ```
 
-A short prose summary of the document.
+An abstract is a short description that summarizes a creative work.
 
-## authors
+## author
 
 ```yaml
 role: meta
 merge: union
+aligned: "schema:author"
 ```
 
-Ordered list of author names.
+The author of the content.
 
 ## url
 
 ```yaml
 role: meta
 merge: fillIfEmpty
+aligned: "schema:url"
 ```
 
 Canonical location of the document/work.
@@ -305,6 +320,7 @@ Canonical location of the document/work.
 ```yaml
 role: meta
 merge: fillIfEmpty
+aligned: "schema:doi"
 ```
 
 Digital object identifier.
@@ -316,29 +332,43 @@ role: meta
 merge: firstWriteWin
 ```
 
-Records John F. Sowa's top-level category, identified by a three-letter code and a leaf name (e.g. `ipc:object`), **decoded into a bag of words**. The three letters decode by position; the leaf name is appended:
+Records John F. Sowa's top-level category:
+- Level 1: independent · relative · mediating
+- Level 2: physical · abstract
+- Level 3: continuant · occurrent
+- Level 4 (Leaf): object · process · schema · script · juncture · participation · description · history · structure · situation · reason · purpose
 
-- Position 1 — `i` independent · `r` relative · `m` mediating
-- Position 2 — `p` physical · `a` abstract
-- Position 3 — `c` continuant · `o` occurrent
-- Leaf — object · process · schema · script · juncture · participation · description · history · structure · situation · reason · purpose
+The `category` predicate MUST contain the four decoded words. Allowed combinations, following John F. Sowa's taxonomy:
+- `[independent, physical, continuant, object]`
+- `[independent, physical, occurrent, process]`
+- `[independent, abstract, continuant, schema]`
+- `[independent, abstract, occurrent, script]`
+- `[relative, physical, continuant, juncture]`
+- `[relative, physical, occurrent, participation]`
+- `[relative, abstract, continuant, description]`
+- `[relative, abstract, occurrent, history]`
+- `[mediating, physical, continuant, structure]`
+- `[mediating, physical, occurrent, situation]`
+- `[mediating, abstract, continuant, reason]`
+- `[mediating, abstract, occurrent, purpose]`
 
-The full code-to-word mapping:
+## about
 
-- `ipc:object` → `[independent, physical, continuant, object]`
-- `ipo:process` → `[independent, physical, occurrent, process]`
-- `iac:schema` → `[independent, abstract, continuant, schema]`
-- `iao:script` → `[independent, abstract, occurrent, script]`
-- `rpc:juncture` → `[relative, physical, continuant, juncture]`
-- `rpo:participation` → `[relative, physical, occurrent, participation]`
-- `rac:description` → `[relative, abstract, continuant, description]`
-- `rao:history` → `[relative, abstract, occurrent, history]`
-- `mpc:structure` → `[mediating, physical, continuant, structure]`
-- `mpo:situation` → `[mediating, physical, occurrent, situation]`
-- `mac:reason` → `[mediating, abstract, continuant, reason]`
-- `mao:purpose` → `[mediating, abstract, occurrent, purpose]`
+```yaml
+role: meta
+merge: union
+```
 
-The `category` predicate MUST contain the four decoded words. A consumer MAY recompose the code.
+The subject matter of a node: `technique`/`theory`/`platform`/`system`/`technology`/`language`/`framework`/`field`.
+
+## genre
+
+```yaml
+role: meta
+merge: union
+```
+
+Genre of the node: `paper`/`standard`/`tool`/`dataset`/`post`.
 
 ## aliases
 
@@ -347,88 +377,7 @@ role: meta
 merge: union
 ```
 
-Alternative names (`skos:altLabel`, §7.4).
-
-## definition
-
-```yaml
-role: text
-merge: firstWriteWin
-```
-
-A 1–3 sentence definition of the subject.
-
-## notes
-
-```yaml
-role: text
-merge: firstWriteWin
-```
-
-Additional prose.
-
-## ref
-
-```yaml
-role: meta
-merge: immutable
-```
-
-Resource type: a citable work (`paper`/`standard`/`tool`/`dataset`/`post`) or a topic/area (`technique`/`theory`/`platform`/`system`/`technology`/`language`/`framework`/`field`); a profile MAY extend the set.
-
-## year
-
-```yaml
-role: meta
-merge: fillIfEmpty
-```
-
-Year of publication.
-
-## status
-
-```yaml
-role: meta
-merge: lastWriteWin
-```
-
-`read` or `backlog` — a `backlog` resource is a research target.
-
-## relevance
-
-```yaml
-role: text
-merge: firstWriteWin
-```
-
-A 1–2 sentence note on why the resource matters.
-
-## granularity
-
-```yaml
-role: meta
-merge: immutable
-```
-
-`yearly` or `monthly`.
-
-## entries
-
-```yaml
-role: link
-merge: append
-```
-
-The `source` nodes whose `published` date falls in this period, ordered by date.
-
-## heading
-
-```yaml
-role: meta
-merge: firstWriteWin
-```
-
-A human-readable title for the period, shown as H1 in place of the bare `@id` (period code).
+Alternative identities (`skos:altLabel`, §7.4).
 
 ## role
 
@@ -496,7 +445,7 @@ Asserts that the class permits the target predicate. Recorded under the class's 
 
 # Class
 
-## source
+## Source
 
 A node for one ingested document — the provenance origin other nodes derive from.
 
@@ -507,51 +456,52 @@ A node for one ingested document — the provenance origin other nodes derive fr
 - required:: [[mentions]]
 
 **Optional**
-- optional:: [[authors]]
+- optional:: [[author]]
 - optional:: [[url]]
 - optional:: [[cites]]
 - optional:: [[tags]]
 - optional:: [[doi]]
 
-## entity
+## Entity
 
-A node for a subject occurring in sources, typed by Sowa category (`category`, §10.7).
+A node for a subject occurring in sources, typed by Sowa category (`category`, §10.2).
 
 **Requires**
 - required:: [[category]]
-- required:: [[definition]]
+- required:: [[text]]
 - required:: [[mentionedIn]]
 
 **Optional**
 - optional:: [[aliases]]
 - optional:: [[tags]]
-- optional:: [[notes]]
 - any §10.5 semantic predicate, as applicable
 
-## resource
+## Resource
 
-A node for an external work the graph points to but has not ingested, or a topic/area tracked for reading or research.
+A fragment of an ingested document's content that is relevant to the graph but does not warrant its own dedicated type.
 
 **Requires**
-- required:: [[ref]]
-- required:: [[relevance]]
+- required:: [[text]]
+- required:: [[tags]]
+- required:: [[mentionedIn]]
 
-**Optional**
-- optional:: [[url]]
-- optional:: [[isCitedBy]]
-- optional:: [[authors]]
-- optional:: [[year]]
-- optional:: [[doi]]
-- optional:: [[status]]
-- optional:: [[notes]]
-
-## timeline
+## Timeline
 
 A production-date index of ingested documents.
 
 **Requires**
-- required:: [[granularity]]
-- required:: [[entries]]
+- required:: [[cites]]
+
+## Reference
+
+A node for an external work the graph points to but has not ingested, or a topic/area tracked for reading or research.
+
+**Requires**
+- required:: [[title]]
 
 **Optional**
-- optional:: [[heading]]
+- optional:: [[url]]
+- optional:: [[author]]
+- optional:: [[published]]
+- optional:: [[doi]]
+- optional:: [[isCitedBy]]

@@ -1,6 +1,6 @@
 # DOMAIN CORE THOUGHT - Markdown Knowledge Graph extension with Core Thoughts
 
-**Status:** Draft · **Version:** 0.4 · **Date:** 2026-08-27
+**Status:** Draft · **Version:** 0.5 · **Date:** 2026-08-27
 **Extends:** [`ARCNET-CORE.md`](ARCNET-CORE.md)
 
 > Revision note (0.1 → 0.2): follows CORE v0.6's predicate-first model. `kind`/`id`/`title` → `@type`/`@id`. `thought`'s front-matter `source` field was a link value stored where CORE's `meta` role only ever holds scalars — it is now the `derivedFrom` predicate itself, asserted as a body edge. `thought`'s cognitive-role field is renamed from `class` to `cognition`: CORE registers predicates globally, one node per name (CORE §9.1), and this extension's `class` (`insight`/`hypothesis`/`principle`/`question`/`direction`/`decision`, set once at creation) is a different predicate from [`DOMAIN-ARTICLE`](ARCNET-DOMAIN-ARTICLE.md)'s `class` (`established`/`extended`/`novel`/…, produced only by a later validation pass) — the two would otherwise collide under one global name when both extensions are adopted together, which §1 says must work. Predicates are now registered as individual `_schema/predicates/`/`_schema/types/` nodes (CORE §9), described one-per-heading (CORE §10's style) rather than in a table.
@@ -8,6 +8,8 @@
 > Revision note (0.2 → 0.3): follows CORE v0.7's retirement of the `## Recommended` tier. `maturity`/`about`/`motivation`/`concerns` are now optional rather than recommended — none is essential to what a `thought` minimally asserts (a claim, its cognitive role, and its provenance).
 >
 > Revision note (0.3 → 0.4): follows CORE v0.9's type-naming rule (types MUST be UpperCamelCase) and v0.11's folder rule (a type's folder name MUST be character-for-character identical to the type name): `thought`/`source`/`entity`/`resource`/`timeline` are renamed `Thought`/`Source`/`Entity`/`Resource`/`Timeline` everywhere — `@type` values, the `_schema/Class/` basename, and folder names (`thoughts/`→`Thought/`, `sources/`→`Source/`, `entities/`→`Entity/`, `resources/`→`Resource/`); `_schema/predicates/`→`_schema/Property/`, `_schema/types/`→`_schema/Class/` per CORE v0.11 §6. Adds a new §4, "Extended Types": `generatedThought` is a backlink recorded under a `Source` node's own `## Generated Thought` block, but no prior version of this extension actually registered that predicate as `Optional` on CORE's `Source` Class node (CORE §4 invariant 5 / §9.2) — a compliance gap present since 0.1, closed here the same way [DOMAIN-ARTICLE](ARCNET-DOMAIN-ARTICLE.md) §3.1 extends `Source` for `proposes`/`raises`. `generatedThought` also gains an explicit `label` (`Generated Thought`) so its rendered heading matches CORE §9.1's "predicate name, capitalized" default instead of the literal, un-humanized `generatedThought` the old worked example showed.
+>
+> Revision note (0.4 → 0.5): CORE §10.2 registers its own `about` predicate (role `meta`, merge `union`, a subject-matter enum: `technique`/`theory`/`platform`/…) — a different predicate from this extension's `about` (role `text`, merge `firstWriteWin`, a 2–4 sentence rationale), colliding under one global name in violation of CORE §9.1's "one node per predicate name" invariant, the same class of bug the 0.1 → 0.2 note fixed for `class`/`cognition`. Renamed to `rationale` throughout.
 
 This extension adds one new node type, `Thought` ([CORE](ARCNET-CORE.md) §15), for the
 synthesized insights, hypotheses, principles, questions, directions, and decisions an author
@@ -74,7 +76,7 @@ author draws from a body of notes.
 
 ## Optional
 - optional:: [[maturity]]
-- optional:: [[about]]
+- optional:: [[rationale]]
 - optional:: [[motivation]]
 - optional:: [[concerns]]
 - optional:: [[citesAsEvidence]]
@@ -93,7 +95,7 @@ provided application-layer idempotency is enforced upstream.*
 
 - derivedFrom:: [[rescorla-2026-tls13]]
 
-**About**
+**Rationale**
 The 1-RTT handshake's latency savings are why TLS 1.3 standardized it despite a known replay
 exposure; the design bet is that idempotency enforcement is cheaper than losing the round trip.
 
@@ -164,7 +166,7 @@ resumption.
 
 ## 5. Predicates
 
-This extension registers `generatedThought`, `cognition`, `maturity`, `about`, `motivation`, and
+This extension registers `generatedThought`, `cognition`, `maturity`, `rationale`, `motivation`, and
 `next` as `_schema/Property/` nodes (CORE §9.1) — each below, one per heading. It reuses
 `derivedFrom`, `concerns`, and `citesAsEvidence` if a co-located profile (e.g.
 [DOMAIN-ARTICLE](ARCNET-DOMAIN-ARTICLE.md) §4.1) already registered them; otherwise this
@@ -211,10 +213,10 @@ The thought's cognitive role, set once at creation: `insight` | `hypothesis` | `
 
 How developed the thought is, legitimately changing over time: `emerging` (early intuition, weakly supported) | `developing` (coherent, supported by multiple points in the paper) | `mature` (well-developed line of reasoning).
 
-#### `about`
+#### `rationale`
 **Used by:** `Thought` · **role:** `text` · **merge:** `firstWriteWin`
 
-A 2–4 sentence rationale: why the thought matters, what problem it addresses.
+A 2–4 sentence rationale: why the thought matters, what problem it addresses. Deliberately **not** named `about` — CORE §10.2 registers its own `about` predicate (role `meta`, a subject-matter enum), a different meaning and merge behavior; the two must not collide under one global predicate name.
 
 #### `motivation`
 **Used by:** `Thought` · **role:** `text` · **merge:** `firstWriteWin`

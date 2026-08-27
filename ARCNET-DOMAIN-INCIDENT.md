@@ -1,6 +1,6 @@
 # DOMAIN INCIDENT - Markdown Knowledge Graph extension with Incidents and Postmortems
 
-**Status:** Draft · **Version:** 0.3 · **Date:** 2026-08-27
+**Status:** Draft · **Version:** 0.4 · **Date:** 2026-08-27
 **Extends:** [`ARCNET-CORE.md`](ARCNET-CORE.md)
 
 > Revision note (0.1 → 0.2): `ContributingFactor` is promoted from a `tags` classification on
@@ -28,6 +28,14 @@
 > reading-state predicate of that name; CORE v0.12 retired `status` from `Reference` outright, so
 > the rationale is corrected to note the name stays reserved on principle, not against a predicate
 > that still exists.
+>
+> Revision note (0.3 → 0.4): 0.2 → 0.3 re-registered `notes` as this profile's own predicate after
+> discovering CORE retired it in v0.12 — but re-registering it just carried the same badly-inherited
+> field forward under new ownership. `notes` is now removed outright: dropped from `Incident`'s,
+> `Cause`'s, `ContributingFactor`'s, `CorrectiveAction`'s, and `Learning`'s Optional lists and their
+> predicate tables, and its `_schema/Property/` registration (§5.3) is deleted. Free-form prose that
+> doesn't fit a type's other predicates belongs in `text` (`Incident`/`Cause`/`ContributingFactor`/
+> `CorrectiveAction`, which already merges by accumulation) or `overview` (`Learning`).
 
 This profile ingests **postmortem documents** into a knowledge graph. It adopts the CORE types
 (`Source`, `Entity`, `Resource`, `Reference`, `Timeline`, [CORE §11](ARCNET-CORE.md)) and adds five
@@ -166,7 +174,6 @@ the organization's incident identifier where one exists — `Checkout API Outage
 | `learned`        | link | union         | 0..n  | `Learning`                               |
 | `addressedBy`    | edge | union         | 0..n  | `CorrectiveAction`                       |
 | `tags`           | meta | union         | 0..n  | CORE §10.2                               |
-| `notes`          | text | append        | 0..1  | §5.2                                     |
 
 `causedBy` is `0..n`: a postmortem that reached no conclusion still produces a valid `Incident`, and
 *incidents with no identified root cause* is a query this graph exists to answer.
@@ -203,7 +210,6 @@ single event.
 - optional:: [[learned]]
 - optional:: [[addressedBy]]
 - optional:: [[tags]]
-- optional:: [[notes]]
 ```
 
 ```markdown
@@ -286,7 +292,6 @@ one incident and a trigger in the next. What is intrinsic to the condition is it
 | `concerns`           | edge | union         | 0..n  | `Entity`                   |
 | `addressedBy`        | edge | union         | 0..n  | `CorrectiveAction`         |
 | `tags`               | meta | union         | 0..n  | CORE §10.2                 |
-| `notes`              | text | append        | 0..1  | §5.2                       |
 
 ```markdown
 ---
@@ -308,7 +313,6 @@ than a dated occurrence.
 - optional:: [[concerns]]
 - optional:: [[addressedBy]]
 - optional:: [[tags]]
-- optional:: [[notes]]
 ```
 
 ```markdown
@@ -355,7 +359,6 @@ incidents is exactly the pattern this type exists to make visible.
 | `concerns`    | edge | union         | 0..n  | `Entity`                   |
 | `addressedBy` | edge | union         | 0..n  | `CorrectiveAction`         |
 | `tags`        | meta | union         | 0..n  | CORE §10.2                 |
-| `notes`       | text | append        | 0..1  | §5.2                       |
 
 ```markdown
 ---
@@ -376,7 +379,6 @@ initiating it. Bound to a [[Cause]] by [[contributingFactor]].
 - optional:: [[concerns]]
 - optional:: [[addressedBy]]
 - optional:: [[tags]]
-- optional:: [[notes]]
 ```
 
 ```markdown
@@ -420,7 +422,6 @@ The type is `CorrectiveAction`, not `Action`: type names are registered globally
 | `owner`        | edge | union        | 0..n  | `Entity` (Team, §4.2)                         |
 | `due`          | meta | lastWriteWin | 0..1  | ISO-8601 date                                 |
 | `tags`         | meta | union        | 0..n  | CORE §10.2                                    |
-| `notes`        | text | append       | 0..1  | §5.2                                          |
 
 ```markdown
 ---
@@ -441,7 +442,6 @@ A remedy a postmortem commits to, addressing an identified cause or contributing
 - optional:: [[owner]]
 - optional:: [[due]]
 - optional:: [[tags]]
-- optional:: [[notes]]
 ```
 
 ```markdown
@@ -479,10 +479,9 @@ teaching the same lesson yields the same title and merges into the same node (§
 | `overview`        | text | firstWriteWin | 0..1  | paragraph of context            |
 | `citesAsEvidence` | edge | union         | 0..n  | `Reference` (CORE §10.6)        |
 | `tags`            | meta | union         | 0..n  | CORE §10.2                      |
-| `notes`           | text | append        | 0..1  | §5.2                            |
 
 `concerns` is `1..n`: a lesson generalizing to nothing is a note about one incident and belongs in
-that incident's `notes`. The entities it concerns are how a later reader finds it.
+that incident's `text`. The entities it concerns are how a later reader finds it.
 
 ```markdown
 ---
@@ -503,7 +502,6 @@ it.
 - optional:: [[overview]]
 - optional:: [[citesAsEvidence]]
 - optional:: [[tags]]
-- optional:: [[notes]]
 ```
 
 ```markdown
@@ -849,14 +847,6 @@ is `addresses`, asserted by the action; where both are asserted they MUST be con
 
 A short paragraph of context. Identical to [DOMAIN-ARTICLE](ARCNET-DOMAIN-ARTICLE.md) §4.2's
 predicate of the same name.
-
-#### `notes`
-**Used by:** `Incident`, `Cause`, `ContributingFactor`, `CorrectiveAction`, `Learning` · **role:** `text` · **merge:** `append` · **aligned:** `arc:notes`
-
-Free-form prose that doesn't fit the type's other predicates. Registered here rather than reused
-from CORE: CORE retired its own `notes` predicate in v0.12 without reinstating it, so this profile
-registers it as its own. Identical in role/merge to [DOMAIN-ARTICLE](ARCNET-DOMAIN-ARTICLE.md)
-§4.2's predicate of the same name; reuse it if already registered.
 
 CORE's `text`, `tags`, and citation vocabulary (§10.6 — e.g. `citesAsEvidence` pointing a
 `Learning` at a `Reference`) are used unchanged. `text` carries the issue summary on an `Incident`

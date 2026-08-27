@@ -1,8 +1,8 @@
 ---
-kind: patch
+"@type": patch
 document: ARCNET-DOMAIN-CORE-THOUGHT.md
-published: 2026-07-07
-stats: { nodes: 7, edges: 9 }
+published: 2026-08-27
+stats: { nodes: 8, edges: 10 }
 ---
 
 # Property
@@ -12,10 +12,11 @@ stats: { nodes: 7, edges: 9 }
 ```yaml
 role: link
 merge: union
+label: "Generated Thought"
 aligned: "prov:hadDerivation"
 ```
 
-The inverse of `derivedFrom` — recorded as a backlink under the source's own `## generatedThought` block, the navigational convenience for discovering what a source has yielded. Both directions MUST be kept consistent; the canonical direction for provenance queries is `thought → source` via `derivedFrom`.
+The inverse of `derivedFrom` — recorded as a backlink under the source's own `## Generated Thought` block, the navigational convenience for discovering what a source has yielded. Both directions MUST be kept consistent; the canonical direction for provenance queries is `Thought → Source` via `derivedFrom`. Registered as `Optional` on `Source`'s own Class node.
 
 ## cognition
 
@@ -35,14 +36,14 @@ merge: lastWriteWin
 
 How developed the thought is, legitimately changing over time: `emerging` (early intuition, weakly supported) | `developing` (coherent, supported by multiple points in the paper) | `mature` (well-developed line of reasoning).
 
-## about
+## rationale
 
 ```yaml
 role: text
 merge: firstWriteWin
 ```
 
-A 2–4 sentence rationale: why the thought matters, what problem it addresses.
+A 2–4 sentence rationale: why the thought matters, what problem it addresses. Deliberately not named `about` — CORE registers its own `about` predicate (role `meta`, a subject-matter enum), a different meaning and merge behavior.
 
 ## motivation
 
@@ -78,8 +79,16 @@ A node distilling the central insight, hypothesis, principle, question, directio
 
 **Optional**
 - optional:: [[maturity]]
-- optional:: [[about]]
+- optional:: [[rationale]]
 - optional:: [[motivation]]
 - optional:: [[concerns]]
 - optional:: [[citesAsEvidence]]
 - optional:: [[next]]
+
+## Source
+
+```yaml
+```
+
+**Optional**
+- optional:: [[generatedThought]]

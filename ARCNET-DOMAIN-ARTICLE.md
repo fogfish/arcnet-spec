@@ -59,7 +59,6 @@ A conclusion distilled from sources.
 - optional:: [[assumptions]]
 - optional:: [[assumes]]
 - optional:: [[addresses]]
-- optional:: [[notes]]
 - optional:: [[class]]
 - optional:: [[confidence]]
 - any CORE §10.6 citation predicate, as applicable
@@ -115,7 +114,6 @@ An open problem or unresolved tension.
 - optional:: [[concerns]]
 - optional:: [[addressedBy]]
 - optional:: [[solvedBy]]
-- optional:: [[notes]]
 - optional:: [[class]]
 ```
 
