@@ -311,7 +311,7 @@ Generic prose predicate. Each contribution appends to the existing prose rather 
 The title of document of creative work as originally published. (e.g. full article title for `Source` or `Reference`).
 
 #### `abstract`
-**role:** `text` · **aligned:** `schema:abstract` · **merge:** `firstWriteWin`
+**role:** `text` · **aligned:** `schema:abstract` · **merge:** `append`
 
 An abstract is a short description that summarizes a creative work.
 
@@ -331,7 +331,7 @@ Canonical location of the document/work.
 Digital object identifier.
 
 #### `category`
-**role:** `meta` · **merge:** `firstWriteWin`
+**role:** `meta` · **merge:** `immutable`
 
 Records John F. Sowa's top-level category:
 - Level 1: independent · relative · mediating
@@ -529,7 +529,7 @@ Human-readable title shown as a `link`-role predicate's `## ` heading; defaults 
 The standard-vocabulary term this predicate maps to (e.g. `dcterms:isPartOf`), or `arc:<name>` if graph-native.
 
 #### `description`
-**role:** `text` · **merge:** `firstWriteWin`
+**role:** `text` · **merge:** `append`
 
 Prose describing the predicate's or type's meaning — the body text of a `Property`/`Class` node.
 
