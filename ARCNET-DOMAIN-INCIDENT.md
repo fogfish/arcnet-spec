@@ -50,13 +50,13 @@ not a runtime incident-response model. §9 records what it deliberately does not
 
 ### 1.1 Types
 
-| Type                 | Definition                                                                                         | Folder                 | Identity (CORE §7.3)                                      |
-| -------------------- | -------------------------------------------------------------------------------------------------- | ---------------------- | --------------------------------------------------------- |
-| `Incident`           | The operational situation a postmortem analyzes — a recognized disruption with a lifecycle.        | `Incident/`            | Situation name, qualified by date or incident identifier. |
-| `Cause`              | A condition that made an incident possible or initiated it.                                        | `Cause/`                | The condition, as a recurring condition.                  |
-| `ContributingFactor` | A condition that increased an incident's probability, severity, or duration, but did not cause it. | `ContributingFactor/`  | The factor, as a recurring condition.                     |
-| `CorrectiveAction`   | A remedy a postmortem commits to.                                                                  | `CorrectiveAction/`    | The action, as an imperative phrase.                      |
-| `Learning`           | The transferable knowledge a postmortem produced.                                                  | `Learning/`             | The lesson, in short form.                                |
+| Type                 | Definition                                                                                         | Folder                | Identity (CORE §7.3)                                      |
+| -------------------- | -------------------------------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------- |
+| `Incident`           | The operational situation a postmortem analyzes — a recognized disruption with a lifecycle.        | `Incident/`           | Situation name, qualified by date or incident identifier. |
+| `Cause`              | A condition that made an incident possible or initiated it.                                        | `Cause/`              | The condition, as a recurring condition.                  |
+| `ContributingFactor` | A condition that increased an incident's probability, severity, or duration, but did not cause it. | `ContributingFactor/` | The factor, as a recurring condition.                     |
+| `CorrectiveAction`   | A remedy a postmortem commits to.                                                                  | `CorrectiveAction/`   | The action, as an imperative phrase.                      |
+| `Learning`           | The transferable knowledge a postmortem produced.                                                  | `Learning/`           | The lesson, in short form.                                |
 
 `Service`, `Alert`, `Team`, and every other operational subject are CORE `Entity` nodes, not types
 of this profile (§4.2).
@@ -735,23 +735,22 @@ a later postmortem restating the same incident adds bullets rather than replacin
 which is why it is a list of statements and not one paragraph.
 
 #### `resolution`
-**Used by:** `Incident` · **role:** `text` · **merge:** `firstWriteWin`
+**Used by:** `Incident` · **role:** `text` · **merge:** `append`
 
 How the incident was brought to an end — distinct from a `CorrectiveAction`, which prevents its
 recurrence. Displayed under the bold label **Resolution**.
 
 #### `lesson`
-**Used by:** `Learning` · **role:** `text` · **merge:** `firstWriteWin`
+**Used by:** `Learning` · **role:** `text` · **merge:** `append`
 
 A one-sentence statement of the transferable lesson, rendered emphasized (`*lesson*`). Phrased
 generally: it must remain true of the next incident that teaches it.
 
 #### `severity`
-**Used by:** `Incident` · **role:** `meta` · **merge:** `firstWriteWin`
+**Used by:** `Incident` · **role:** `meta` · **merge:** `immutable`
 
-The incident's severity (§6.1). `firstWriteWin` rather than `immutable`: a later review may restate
-a severity, and a divergent restatement is a disagreement worth flagging (`needsReview`) rather than
-silently accepting.
+Severity of incident SEV1, SEV2, SEV3 classification.
+
 
 #### `startedAt`
 **Used by:** `Incident` · **role:** `meta` · **merge:** `immutable`
@@ -791,7 +790,7 @@ durations that matter — time to detect, time to acknowledge, time to mitigate,
 arithmetic on the node rather than a reading of the narrative.
 
 #### `causeType`
-**Used by:** `Cause`, `ContributingFactor` · **role:** `meta` · **merge:** `firstWriteWin`
+**Used by:** `Cause`, `ContributingFactor` · **role:** `meta` · **merge:** `union`
 
 The nature of the condition (§6.2) — intrinsic to it, unlike the role it played in any one incident,
 which the edge carries (§3.2).
@@ -843,7 +842,7 @@ The inverse of `addresses`, displayed under the bold label **Addressed by**. The
 is `addresses`, asserted by the action; where both are asserted they MUST be consistent.
 
 #### `overview`
-**Used by:** `Learning` · **role:** `text` · **merge:** `firstWriteWin`
+**Used by:** `Learning` · **role:** `text` · **merge:** `append`
 
 A short paragraph of context. Identical to [DOMAIN-ARTICLE](ARCNET-DOMAIN-ARTICLE.md) §4.2's
 predicate of the same name.

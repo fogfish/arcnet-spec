@@ -116,7 +116,7 @@ What the incident cost — a list of statements, one per bullet, each prefixed b
 
 ```yaml
 role: text
-merge: firstWriteWin
+merge: append
 ```
 
 How the incident was brought to an end — distinct from a `CorrectiveAction`, which prevents its recurrence. Displayed under the bold label **Resolution**.
@@ -125,7 +125,7 @@ How the incident was brought to an end — distinct from a `CorrectiveAction`, w
 
 ```yaml
 role: text
-merge: firstWriteWin
+merge: append
 ```
 
 A one-sentence statement of the transferable lesson, rendered emphasized (`*lesson*`). Phrased generally: it must remain true of the next incident that teaches it.
@@ -134,10 +134,10 @@ A one-sentence statement of the transferable lesson, rendered emphasized (`*less
 
 ```yaml
 role: meta
-merge: firstWriteWin
+merge: immutable
 ```
 
-The incident's severity: `critical`/`major`/`minor`. `firstWriteWin` rather than `immutable`: a later review may restate a severity, and a divergent restatement is a disagreement worth flagging (`needsReview`) rather than silently accepting.
+The incident's severity: `SEV1`/`SEV2`/`SEV3`.
 
 ## startedAt
 
@@ -197,7 +197,7 @@ ISO-8601 timestamp at which the incident was formally closed.
 
 ```yaml
 role: meta
-merge: firstWriteWin
+merge: union
 ```
 
 The nature of the condition — `technical`/`process`/`organizational`/`human`/`external` — intrinsic to it, unlike the role it played in any one incident, which the edge carries.
