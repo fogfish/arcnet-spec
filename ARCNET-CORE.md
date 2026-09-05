@@ -104,9 +104,9 @@ Concretely:
 
 - **Front-matter** carries every predicate with role `meta`, including the mandatory `@id` and `@type` (§10.1). A predicate name beginning with `@` MUST be written as a quoted YAML string key — `"@id"`, `"@type"` — never bare (`@id:`). YAML reserves the unquoted `@` character as an indicator for future use, so a bare `@id:` key is invalid or inconsistently accepted across parsers; quoting is the only form every conforming YAML parser accepts.
 - **Body** carries:
-  - prose, from `text`-role predicates;
+  - prose, from `text`-role predicates; Start with values from default `text` predicate and continue into other `text`-role predicates but prepend, each block with bold, capital predicate name or its label. 
   - inline `[[link]]`s, from `href`-role predicates — untyped mentions embedded in a `text` predicate's prose. A `text` predicate's own statement is never replaced by an embedded link, only annotated by it.
-  - one heterogeneous block of `predicate:: [[Target]]` bullets, holding every `edge`-role predicate in use on this node, grouped by purpose under a bold label where that aids reading;
+  - one heterogeneous block of `predicate:: [[Target]]` bullets, holding every `edge`-role predicate in use on this node, grouped by purpose under a bold label where that aids reading; 
   - one `## Predicate` block per `link`-role predicate in use, its bullets written exactly as `edge`-role bullets are (§8.2's list form, `predicate:: [[Target]]`) — the heading groups them for display, it does not change the bullet syntax. When a type's body consists of exactly one `link`-role predicate, the `## ` heading MAY be omitted, since the block is the entire body (e.g. `Timeline`'s `cites`, §11.5).
 
 A node's **type** is named by its `@type` predicate and defined by CORE (§11) or a domain profile: the type's own schema node (§9.2) fixes which predicates it requires or permits.
