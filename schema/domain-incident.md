@@ -364,13 +364,23 @@ The transferable knowledge a postmortem produced, generalized beyond the inciden
 
 **Requires**
 - required:: [[derivedFrom]]
-- required:: [[lesson]]
+- required:: [[text]]
 - required:: [[concerns]]
 
 **Optional**
 - optional:: [[overview]]
 - optional:: [[citesAsEvidence]]
 - optional:: [[tags]]
+- optional:: [[lesson]]
+
+
+## Entity
+
+```yaml
+```
+
+**Optional**
+- optional:: [[concerns]]
 
 ## Source
 
