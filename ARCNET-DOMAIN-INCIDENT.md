@@ -1,6 +1,6 @@
 # DOMAIN INCIDENT - Markdown Knowledge Graph extension with Incidents and Postmortems
 
-**Status:** Draft · **Version:** 0.4 · **Date:** 2026-08-27
+**Status:** Draft · **Version:** 0.5 · **Date:** 2026-09-05
 **Extends:** [`ARCNET-CORE.md`](ARCNET-CORE.md)
 
 > Revision note (0.1 → 0.2): `ContributingFactor` is promoted from a `tags` classification on
@@ -36,6 +36,16 @@
 > predicate tables, and its `_schema/Property/` registration (§5.3) is deleted. Free-form prose that
 > doesn't fit a type's other predicates belongs in `text` (`Incident`/`Cause`/`ContributingFactor`/
 > `CorrectiveAction`, which already merges by accumulation) or `overview` (`Learning`).
+>
+> Revision note (0.4 → 0.5): merge behaviors stated twice — once in a type's §3 predicate table and
+> once in the predicate's §5 registration — had drifted apart. §5 is authoritative (a predicate's
+> merge behavior is a property of the predicate, not of the type using it, CORE §4 invariant 4), so
+> the §3 tables are corrected to match it: `severity` is `immutable` (was `firstWriteWin` in §3.1),
+> `resolution` is `append` (§3.1), `causeType` is `union` (§3.2, §3.3), and `lesson` and `overview`
+> are `append` (§3.5). No `firstWriteWin` merge remains in the profile. §6.1's `severity` vocabulary
+> is restated as `SEV1`/`SEV2`/`SEV3`, the values §5.2 already named, with named ladders
+> (`critical`/`major`/`minor`) becoming the local labels that MUST be mapped onto them — the
+> inverse of 0.4's direction; §3.1's worked example is updated accordingly.
 
 This profile ingests **postmortem documents** into a knowledge graph. It adopts the CORE types
 (`Source`, `Entity`, `Resource`, `Reference`, `Timeline`, [CORE §11](ARCNET-CORE.md)) and adds five
@@ -157,7 +167,7 @@ the organization's incident identifier where one exists — `Checkout API Outage
 | ---------------- | ---- | ------------- | ----- | ---------------------------------------- |
 | `derivedFrom`    | edge | union         | 1..n  | `Source`                                 |
 | `text`           | text | append        | 1     | the issue summary — leading paragraph    |
-| `severity`       | meta | firstWriteWin | 1     | §6.1                                     |
+| `severity`       | meta | immutable     | 1     | §6.1                                     |
 | `startedAt`      | meta | immutable     | 0..1  | ISO-8601 timestamp                       |
 | `detectedAt`     | meta | immutable     | 1     | ISO-8601 timestamp                       |
 | `acknowledgedAt` | meta | immutable     | 0..1  | ISO-8601 timestamp                       |
@@ -166,7 +176,7 @@ the organization's incident identifier where one exists — `Checkout API Outage
 | `closedAt`       | meta | immutable     | 0..1  | ISO-8601 timestamp                       |
 | `chronology`     | text | append        | 0..1  | timed bullets                            |
 | `impact`         | text | append        | 1..n  | one statement per impact, facet-prefixed |
-| `resolution`     | text | firstWriteWin | 0..1  | how the incident was ended               |
+| `resolution`     | text | append        | 0..1  | how the incident was ended               |
 | `affects`        | link | union         | 1..n  | `Entity` (Service, §4.2)                 |
 | `causedBy`       | link | union         | 0..n  | `Cause`                                  |
 | `triggeredBy`    | link | union         | 0..n  | `Cause`                                  |
@@ -216,7 +226,7 @@ single event.
 ---
 "@id": Checkout API Outage (2026-04-12)
 "@type": Incident
-severity: critical
+severity: SEV1
 startedAt: 2026-04-12T09:14:00Z
 detectedAt: 2026-04-12T09:31:00Z
 acknowledgedAt: 2026-04-12T09:33:00Z
@@ -287,7 +297,7 @@ one incident and a trigger in the next. What is intrinsic to the condition is it
 | -------------------- | ---- | ------------- | ----- | -------------------------- |
 | `derivedFrom`        | edge | union         | 1..n  | `Source`                   |
 | `text`               | text | append        | 1     | statement of the condition |
-| `causeType`          | meta | firstWriteWin | 1     | §6.2                       |
+| `causeType`          | meta | union         | 1     | §6.2                       |
 | `contributingFactor` | link | union         | 0..n  | `ContributingFactor`       |
 | `concerns`           | edge | union         | 0..n  | `Entity`                   |
 | `addressedBy`        | edge | union         | 0..n  | `CorrectiveAction`         |
@@ -355,7 +365,7 @@ incidents is exactly the pattern this type exists to make visible.
 | ------------- | ---- | ------------- | ----- | -------------------------- |
 | `derivedFrom` | edge | union         | 1..n  | `Source`                   |
 | `text`        | text | append        | 1     | statement of the condition |
-| `causeType`   | meta | firstWriteWin | 1     | §6.2                       |
+| `causeType`   | meta | union         | 1     | §6.2                       |
 | `concerns`    | edge | union         | 0..n  | `Entity`                   |
 | `addressedBy` | edge | union         | 0..n  | `CorrectiveAction`         |
 | `tags`        | meta | union         | 0..n  | CORE §10.2                 |
@@ -474,9 +484,9 @@ teaching the same lesson yields the same title and merges into the same node (§
 | Predicate         | Role | Merge         | Card. | Target / value                  |
 | ----------------- | ---- | ------------- | ----- | ------------------------------- |
 | `derivedFrom`     | edge | union         | 1..n  | `Source`                        |
-| `lesson`          | text | firstWriteWin | 1     | one-sentence lesson, emphasized |
+| `lesson`          | text | append        | 1     | one-sentence lesson, emphasized |
 | `concerns`        | edge | union         | 1..n  | `Entity`                        |
-| `overview`        | text | firstWriteWin | 0..1  | paragraph of context            |
+| `overview`        | text | append        | 0..1  | paragraph of context            |
 | `citesAsEvidence` | edge | union         | 0..n  | `Reference` (CORE §10.6)        |
 | `tags`            | meta | union         | 0..n  | CORE §10.2                      |
 
@@ -749,7 +759,7 @@ generally: it must remain true of the next incident that teaches it.
 #### `severity`
 **Used by:** `Incident` · **role:** `meta` · **merge:** `immutable`
 
-Severity of incident SEV1, SEV2, SEV3 classification.
+The incident's severity: `SEV1`/`SEV2`/`SEV3` (§6.1).
 
 
 #### `startedAt`
@@ -857,14 +867,14 @@ that a second postmortem restating a shared condition adds its own reading of it
 
 ### 6.1 `severity`
 
-| Value      | Definition                                                      |
-| ---------- | --------------------------------------------------------------- |
-| `critical` | Customer-facing failure of a primary function, or data at risk. |
-| `major`    | Significant degradation, or failure of a secondary function.    |
-| `minor`    | Limited or internal impact, no customer consequence.            |
+| Value  | Definition                                                      |
+| ------ | --------------------------------------------------------------- |
+| `SEV1` | Customer-facing failure of a primary function, or data at risk. |
+| `SEV2` | Significant degradation, or failure of a secondary function.    |
+| `SEV3` | Limited or internal impact, no customer consequence.            |
 
-A graph whose organization runs a numbered ladder MAY map onto these — typically SEV1 → `critical`,
-SEV2 → `major`, SEV3 and below → `minor` — but MUST record the mapped value, not the local label, so
+A graph whose organization runs a named ladder MAY map onto these — typically `critical` → SEV1,
+`major` → SEV2, `minor` and below → SEV3 — but MUST record the mapped value, not the local label, so
 severity stays comparable across the graph.
 
 ### 6.2 `causeType`

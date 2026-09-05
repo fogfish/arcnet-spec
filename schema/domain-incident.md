@@ -1,8 +1,8 @@
 ---
 "@type": patch
 document: ARCNET-DOMAIN-INCIDENT.md
-published: 2026-08-27
-stats: { nodes: 28, edges: 46 }
+published: 2026-09-05
+stats: { nodes: 33, edges: 46 }
 ---
 
 # Property
@@ -219,6 +219,55 @@ merge: lastWriteWin
 ```
 
 ISO-8601 date the action is expected to complete. Mutable: dates are re-committed.
+
+## derivedFrom
+
+```yaml
+role: edge
+merge: union
+aligned: "prov:wasDerivedFrom"
+```
+
+The provenance edge to the postmortem(s) a node was distilled from. Carried by every domain node of this profile — `Incident`, `Cause`, `ContributingFactor`, `CorrectiveAction`, `Learning` — to every `Source` that asserts it. Identical to DOMAIN-ARTICLE's predicate of the same name.
+
+## concerns
+
+```yaml
+role: edge
+merge: union
+aligned: "schema:about"
+```
+
+The entities a condition involves or a lesson generalizes to. Identical to DOMAIN-ARTICLE's predicate of the same name.
+
+## addresses
+
+```yaml
+role: edge
+merge: union
+aligned: "arc:addresses"
+```
+
+What a corrective action tackles — a `Cause`, a `ContributingFactor`, or the `Incident` as a whole. Displayed under the bold label **Addresses**. Identical to DOMAIN-ARTICLE's predicate of the same name (there, Hypothesis → Aporia); this profile extends the targets it applies to, not its meaning.
+
+## addressedBy
+
+```yaml
+role: edge
+merge: union
+aligned: "arc:addressedBy"
+```
+
+The inverse of `addresses`, displayed under the bold label **Addressed by**. The canonical direction is `addresses`, asserted by the action; where both are asserted they MUST be consistent.
+
+## overview
+
+```yaml
+role: text
+merge: append
+```
+
+A short paragraph of context. Identical to DOMAIN-ARTICLE's predicate of the same name.
 
 # Class
 
