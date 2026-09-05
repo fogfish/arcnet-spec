@@ -163,27 +163,27 @@ The operational situation a postmortem analyzes.
 MUST be qualified (CORE §7.1) by the incident's date — `Checkout API Outage (2026-04-12)` — or by
 the organization's incident identifier where one exists — `Checkout API Outage (INC-4471)`.
 
-| Predicate        | Role | Merge         | Card. | Target / value                           |
-| ---------------- | ---- | ------------- | ----- | ---------------------------------------- |
-| `derivedFrom`    | edge | union         | 1..n  | `Source`                                 |
-| `text`           | text | append        | 1     | the issue summary — leading paragraph    |
-| `severity`       | meta | immutable     | 1     | §6.1                                     |
-| `startedAt`      | meta | immutable     | 0..1  | ISO-8601 timestamp                       |
-| `detectedAt`     | meta | immutable     | 1     | ISO-8601 timestamp                       |
-| `acknowledgedAt` | meta | immutable     | 0..1  | ISO-8601 timestamp                       |
-| `mitigatedAt`    | meta | immutable     | 0..1  | ISO-8601 timestamp                       |
-| `resolvedAt`     | meta | immutable     | 0..1  | ISO-8601 timestamp                       |
-| `closedAt`       | meta | immutable     | 0..1  | ISO-8601 timestamp                       |
-| `chronology`     | text | append        | 0..1  | timed bullets                            |
-| `impact`         | text | append        | 1..n  | one statement per impact, facet-prefixed |
-| `resolution`     | text | append        | 0..1  | how the incident was ended               |
-| `affects`        | link | union         | 1..n  | `Entity` (Service, §4.2)                 |
-| `causedBy`       | link | union         | 0..n  | `Cause`                                  |
-| `triggeredBy`    | link | union         | 0..n  | `Cause`                                  |
-| `detectedBy`     | link | union         | 0..n  | `Entity` (Alert, §4.2)                   |
-| `learned`        | link | union         | 0..n  | `Learning`                               |
-| `addressedBy`    | edge | union         | 0..n  | `CorrectiveAction`                       |
-| `tags`           | meta | union         | 0..n  | CORE §10.2                               |
+| Predicate        | Role | Merge     | Card. | Target / value                           |
+| ---------------- | ---- | --------- | ----- | ---------------------------------------- |
+| `derivedFrom`    | edge | union     | 1..n  | `Source`                                 |
+| `text`           | text | append    | 1     | the issue summary — leading paragraph    |
+| `severity`       | meta | immutable | 1     | §6.1                                     |
+| `startedAt`      | meta | immutable | 0..1  | ISO-8601 timestamp                       |
+| `detectedAt`     | meta | immutable | 1     | ISO-8601 timestamp                       |
+| `acknowledgedAt` | meta | immutable | 0..1  | ISO-8601 timestamp                       |
+| `mitigatedAt`    | meta | immutable | 0..1  | ISO-8601 timestamp                       |
+| `resolvedAt`     | meta | immutable | 0..1  | ISO-8601 timestamp                       |
+| `closedAt`       | meta | immutable | 0..1  | ISO-8601 timestamp                       |
+| `chronology`     | text | append    | 0..1  | timed bullets                            |
+| `impact`         | text | append    | 1..n  | one statement per impact, facet-prefixed |
+| `resolution`     | text | append    | 0..1  | how the incident was ended               |
+| `affects`        | link | union     | 1..n  | `Entity` (Service, §4.2)                 |
+| `causedBy`       | link | union     | 0..n  | `Cause`                                  |
+| `triggeredBy`    | link | union     | 0..n  | `Cause`                                  |
+| `detectedBy`     | link | union     | 0..n  | `Entity` (Alert, §4.2)                   |
+| `learned`        | link | union     | 0..n  | `Learning`                               |
+| `addressedBy`    | edge | union     | 0..n  | `CorrectiveAction`                       |
+| `tags`           | meta | union     | 0..n  | CORE §10.2                               |
 
 `causedBy` is `0..n`: a postmortem that reached no conclusion still produces a valid `Incident`, and
 *incidents with no identified root cause* is a query this graph exists to answer.
@@ -293,15 +293,15 @@ same condition links to that same node (§1.3).
 (`causedBy`, `triggeredBy`), not by any predicate on the cause: the same condition is a root cause in
 one incident and a trigger in the next. What is intrinsic to the condition is its `causeType` (§6.2).
 
-| Predicate            | Role | Merge         | Card. | Target / value             |
-| -------------------- | ---- | ------------- | ----- | -------------------------- |
-| `derivedFrom`        | edge | union         | 1..n  | `Source`                   |
-| `text`               | text | append        | 1     | statement of the condition |
-| `causeType`          | meta | union         | 1     | §6.2                       |
-| `contributingFactor` | link | union         | 0..n  | `ContributingFactor`       |
-| `concerns`           | edge | union         | 0..n  | `Entity`                   |
-| `addressedBy`        | edge | union         | 0..n  | `CorrectiveAction`         |
-| `tags`               | meta | union         | 0..n  | CORE §10.2                 |
+| Predicate            | Role | Merge  | Card. | Target / value             |
+| -------------------- | ---- | ------ | ----- | -------------------------- |
+| `derivedFrom`        | edge | union  | 1..n  | `Source`                   |
+| `text`               | text | append | 1     | statement of the condition |
+| `causeType`          | meta | union  | 1     | §6.2                       |
+| `contributingFactor` | link | union  | 0..n  | `ContributingFactor`       |
+| `concerns`           | edge | union  | 0..n  | `Entity`                   |
+| `addressedBy`        | edge | union  | 0..n  | `CorrectiveAction`         |
+| `tags`               | meta | union  | 0..n  | CORE §10.2                 |
 
 ```markdown
 ---
@@ -361,14 +361,14 @@ incident only through that cause: `Incident → Cause → ContributingFactor`. O
 causes, and one cause to many factors; a factor recurring under several causes across several
 incidents is exactly the pattern this type exists to make visible.
 
-| Predicate     | Role | Merge         | Card. | Target / value             |
-| ------------- | ---- | ------------- | ----- | -------------------------- |
-| `derivedFrom` | edge | union         | 1..n  | `Source`                   |
-| `text`        | text | append        | 1     | statement of the condition |
-| `causeType`   | meta | union         | 1     | §6.2                       |
-| `concerns`    | edge | union         | 0..n  | `Entity`                   |
-| `addressedBy` | edge | union         | 0..n  | `CorrectiveAction`         |
-| `tags`        | meta | union         | 0..n  | CORE §10.2                 |
+| Predicate     | Role | Merge  | Card. | Target / value             |
+| ------------- | ---- | ------ | ----- | -------------------------- |
+| `derivedFrom` | edge | union  | 1..n  | `Source`                   |
+| `text`        | text | append | 1     | statement of the condition |
+| `causeType`   | meta | union  | 1     | §6.2                       |
+| `concerns`    | edge | union  | 0..n  | `Entity`                   |
+| `addressedBy` | edge | union  | 0..n  | `CorrectiveAction`         |
+| `tags`        | meta | union  | 0..n  | CORE §10.2                 |
 
 ```markdown
 ---
@@ -481,14 +481,14 @@ it.
 **Identity.** `@id` (CORE §7.3) is the lesson in short form, phrased so that a later incident
 teaching the same lesson yields the same title and merges into the same node (§1.3).
 
-| Predicate         | Role | Merge         | Card. | Target / value                  |
-| ----------------- | ---- | ------------- | ----- | ------------------------------- |
-| `derivedFrom`     | edge | union         | 1..n  | `Source`                        |
-| `lesson`          | text | append        | 1     | one-sentence lesson, emphasized |
-| `concerns`        | edge | union         | 1..n  | `Entity`                        |
-| `overview`        | text | append        | 0..1  | paragraph of context            |
-| `citesAsEvidence` | edge | union         | 0..n  | `Reference` (CORE §10.6)        |
-| `tags`            | meta | union         | 0..n  | CORE §10.2                      |
+| Predicate         | Role | Merge  | Card. | Target / value                  |
+| ----------------- | ---- | ------ | ----- | ------------------------------- |
+| `derivedFrom`     | edge | union  | 1..n  | `Source`                        |
+| `lesson`          | text | append | 1     | one-sentence lesson, emphasized |
+| `concerns`        | edge | union  | 1..n  | `Entity`                        |
+| `overview`        | text | append | 0..1  | paragraph of context            |
+| `citesAsEvidence` | edge | union  | 0..n  | `Reference` (CORE §10.6)        |
+| `tags`            | meta | union  | 0..n  | CORE §10.2                      |
 
 `concerns` is `1..n`: a lesson generalizing to nothing is a note about one incident and belongs in
 that incident's `text`. The entities it concerns are how a later reader finds it.
@@ -833,7 +833,7 @@ The provenance edge to the postmortem(s) a node was distilled from. Identical to
 [DOMAIN-ARTICLE](ARCNET-DOMAIN-ARTICLE.md) §4.1's predicate of the same name.
 
 #### `concerns`
-**role:** `edge` · **merge:** `union` · **aligned:** `schema:about` · **from → to:** Cause/ContributingFactor/Learning → Entity
+**role:** `link` · **merge:** `union` · **aligned:** `schema:about` · **from → to:** Cause/ContributingFactor/Learning → Entity
 
 The entities a condition involves or a lesson generalizes to. Identical to
 [DOMAIN-ARTICLE](ARCNET-DOMAIN-ARTICLE.md) §4.1's predicate of the same name.

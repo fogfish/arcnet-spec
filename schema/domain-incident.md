@@ -233,8 +233,9 @@ The provenance edge to the postmortem(s) a node was distilled from. Carried by e
 ## concerns
 
 ```yaml
-role: edge
+role: link
 merge: union
+label: "Concerns"
 aligned: "schema:about"
 ```
 
