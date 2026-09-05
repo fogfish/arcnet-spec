@@ -270,6 +270,15 @@ merge: append
 
 A short paragraph of context. Identical to DOMAIN-ARTICLE's predicate of the same name.
 
+## notes
+
+```yaml
+role: text
+merge: append
+```
+
+A commentary about the incident. 
+
 # Class
 
 ## Incident
@@ -301,6 +310,7 @@ The operational situation a postmortem analyzes — a recognized disruption with
 - optional:: [[learned]]
 - optional:: [[addressedBy]]
 - optional:: [[tags]]
+- optional:: [[notes]]
 
 ## Cause
 
